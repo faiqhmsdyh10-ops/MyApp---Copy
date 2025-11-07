@@ -26,7 +26,13 @@ const App = () => {
         />
       )}
       {page === "register" && (
-        <RegisterForm onSwitchToLogin={() => setPage("login")} />
+        <RegisterForm 
+          onSwitchToLogin={() => setPage("login")}
+          onRegisterSuccess={(user) => {
+            setLoggedInUser(user);
+            setPage("dashboard");
+          }}
+        />
       )}
       {page === "dashboard" && (
         <Dashboard user={loggedInUser} onLogout={handleLogout} />
