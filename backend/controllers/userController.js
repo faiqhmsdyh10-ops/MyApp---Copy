@@ -1,14 +1,18 @@
 // backend/controllers/userController.js
-import pool from '../config/supabaseClient.js'
+import { supabase } from '../config/supabaseClient.js'
 import bcrypt from 'bcrypt'
-
-const PUBLIC_USER_FIELDS = 'id, nama, email, no_hp, alamat, role'
 
 // ambil semua user
 export const getUsers = async (req, res) => {
   try {
-    const { rows } = await pool.query(`SELECT ${PUBLIC_USER_FIELDS} FROM users ORDER BY id DESC`)
-    res.json(rows)
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, nama, email, no_hp, alamat, role')
+      .order('id', { ascending: false })
+
+    if (error) throw error
+
+    res.json(data)
   } catch (err) {
     console.error('❌ Error saat ambil user:', err)
     res.status(500).json({ error: err.message })
@@ -22,14 +26,23 @@ export const createUser = async (req, res) => {
 
     const hashedPassword = password ? await bcrypt.hash(password, 10) : null
 
-    const { rows } = await pool.query(
-      `INSERT INTO users (nama, email, password, no_hp, alamat, role)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING ${PUBLIC_USER_FIELDS}`,
-      [nama, email, hashedPassword, no_hp, alamat, role]
-    )
+    const { data, error } = await supabase
+      .from('users')
+      .insert([
+        {
+          nama,
+          email,
+          password: hashedPassword,
+          no_hp,
+          alamat,
+          role
+        }
+      ])
+      .select('id, nama, email, no_hp, alamat, role')
 
-    res.json({ success: true, user: rows[0] })
+    if (error) throw error
+
+    res.json({ success: true, user: data?.[0] })
   } catch (err) {
     console.error('❌ Error saat tambah user:', err)
     res.status(500).json({ error: err.message })
@@ -45,28 +58,40 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ error: 'Nama, email, dan password wajib diisi' })
     }
 
-    const { rowCount: existingCount } = await pool.query(
-      'SELECT 1 FROM users WHERE email = $1',
-      [email]
-    )
+    const { data: existingUser, error: existingError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle()
 
-    if (existingCount > 0) {
+    if (existingError) throw existingError
+
+    if (existingUser) {
       return res.status(400).json({ error: 'Email sudah terdaftar' })
     }
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const { rows } = await pool.query(
-      `INSERT INTO users (nama, email, password, no_hp, alamat, role)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING ${PUBLIC_USER_FIELDS}`,
-      [nama, email, hashedPassword, no_hp || null, alamat || null, role || 'donatur']
-    )
+    const { data, error } = await supabase
+      .from('users')
+      .insert([
+        {
+          nama,
+          email,
+          password: hashedPassword,
+          no_hp,
+          alamat,
+          role: role || 'donatur'
+        }
+      ])
+      .select('id, nama, email, no_hp, alamat, role')
+
+    if (error) throw error
 
     res.status(201).json({
       success: true,
       message: 'Registrasi berhasil',
-      user: rows[0]
+      user: data?.[0]
     })
   } catch (err) {
     console.error('❌ Error saat registrasi:', err)
@@ -78,16 +103,18 @@ export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body
 
-    const { rows, rowCount } = await pool.query(
-      'SELECT * FROM users WHERE email = $1 LIMIT 1',
-      [email]
-    )
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .maybeSingle()
 
-    if (rowCount === 0) {
+    if (error) throw error
+
+    if (!user) {
       return res.status(401).json({ error: 'Email atau password salah' })
     }
 
-    const user = rows[0]
     const isPasswordValid = await bcrypt.compare(password, user.password)
 
     if (!isPasswordValid) {
