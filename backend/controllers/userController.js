@@ -94,8 +94,33 @@ export const registerUser = async (req, res) => {
       user: data?.[0]
     })
   } catch (err) {
-    console.error('❌ Error saat registrasi:', err)
-    res.status(500).json({ error: err.message || 'Terjadi kesalahan saat registrasi' })
+    console.error('❌ Error saat registrasi:', {
+      message: err.message,
+      details: err.details,
+      hint: err.hint,
+      code: err.code,
+      stack: err.stack
+    })
+    
+    // Berikan pesan error yang lebih informatif
+    let errorMessage = err.message || 'Terjadi kesalahan saat registrasi'
+    
+    if (err.code === '23505') {
+      errorMessage = 'Email sudah terdaftar'
+    } else if (err.code === '42P01') {
+      errorMessage = 'Tabel users tidak ditemukan di database'
+    } else if (err.code === '42501') {
+      errorMessage = 'Tidak memiliki izin untuk mengakses tabel users. Periksa RLS policy atau gunakan service_role key'
+    } else if (err.message?.includes('JWT')) {
+      errorMessage = 'Kunci API tidak valid. Pastikan menggunakan service_role key, bukan anon key'
+    } else if (err.message?.includes('fetch failed')) {
+      errorMessage = 'Tidak dapat terhubung ke database Supabase. Periksa koneksi internet dan konfigurasi SUPABASE_URL'
+    }
+    
+    res.status(500).json({ 
+      error: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    })
   }
 }
 

@@ -7,12 +7,16 @@ export const registerUser = async (userData) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData)
     })
+    const data = await res.json()
     if (!res.ok) {
-      const error = await res.json()
-      throw new Error(error.message || 'Gagal mendaftar')
+      throw new Error(data.error || data.message || 'Gagal mendaftar')
     }
-    return res.json()
+    return data
   } catch (error) {
+    // Jika error adalah network error, beri pesan yang lebih jelas
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      throw new Error('Tidak dapat terhubung ke server. Pastikan server backend berjalan.')
+    }
     throw error
   }
 }

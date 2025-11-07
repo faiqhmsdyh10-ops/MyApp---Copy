@@ -33,6 +33,7 @@ const RegisterForm = ({ onSwitchToLogin, onRegisterSuccess }) => {
         throw new Error("Gagal mendaftar: Data tidak valid");
       }
     } catch (err) {
+      console.error('Registration error:', err);
       setError(err.message || "Gagal mendaftar. Silakan coba lagi.");
       setLoading(false);
     }
