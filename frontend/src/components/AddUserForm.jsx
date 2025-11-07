@@ -7,65 +7,30 @@ const AddUserForm = ({ onUserAdded }) => {
     password: "",
     no_hp: "",
     alamat: "",
-    role: "",
+    role: "donatur",
   });
 
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    try {
-      const response = await fetch("http://localhost:5000/api/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-
-      if (!response.ok) throw new Error("Gagal menambah user");
-
-      alert("✅ User berhasil ditambahkan!");
-      setForm({
-        nama: "",
-        email: "",
-        password: "",
-        no_hp: "",
-        alamat: "",
-        role: "",
-      });
-      onUserAdded(); // refresh data di tabel
-    } catch (error) {
-      console.error("Terjadi kesalahan:", error);
-      alert("❌ Terjadi kesalahan saat menambah user");
-    }
+    alert("Fitur tambah user belum diaktifkan sementara. Fokus tampilan dulu 😄");
   };
 
   return (
     <form
       onSubmit={handleSubmit}
-      style={{
-        display: "grid",
-        gap: "10px",
-        background: "#f8f9fa",
-        padding: "20px",
-        borderRadius: "10px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-      }}
+      className="grid grid-cols-1 md:grid-cols-2 gap-4"
     >
-      <h3 style={{ marginBottom: "10px" }}>Tambah User</h3>
-
       <input
         type="text"
         name="nama"
-        placeholder="Nama"
+        placeholder="Nama Lengkap"
         value={form.nama}
         onChange={handleChange}
-        required
+        className="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-400"
       />
       <input
         type="email"
@@ -73,7 +38,7 @@ const AddUserForm = ({ onUserAdded }) => {
         placeholder="Email"
         value={form.email}
         onChange={handleChange}
-        required
+        className="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-400"
       />
       <input
         type="password"
@@ -81,40 +46,36 @@ const AddUserForm = ({ onUserAdded }) => {
         placeholder="Password"
         value={form.password}
         onChange={handleChange}
-        required
+        className="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-400"
       />
       <input
         type="text"
         name="no_hp"
-        placeholder="No HP"
+        placeholder="Nomor HP"
         value={form.no_hp}
         onChange={handleChange}
+        className="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-400"
       />
-      <input
-        type="text"
+      <textarea
         name="alamat"
         placeholder="Alamat"
         value={form.alamat}
         onChange={handleChange}
-      />
-      <input
-        type="text"
+        className="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-400 md:col-span-2"
+      ></textarea>
+      <select
         name="role"
-        placeholder="Role (misal: admin/user)"
         value={form.role}
         onChange={handleChange}
-      />
-
+        className="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-400"
+      >
+        <option value="donatur">Donatur</option>
+        <option value="penerima">Penerima</option>
+        <option value="admin">Admin</option>
+      </select>
       <button
         type="submit"
-        style={{
-          padding: "10px",
-          background: "#007bff",
-          color: "#fff",
-          border: "none",
-          borderRadius: "6px",
-          cursor: "pointer",
-        }}
+        className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition-all md:col-span-2"
       >
         Tambah User
       </button>

@@ -1,37 +1,46 @@
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-
+import { createClient } from "@supabase/supabase-js";
+import dotenv from "dotenv";
 dotenv.config();
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-// Get all users
+// 🔹 GET semua user
 export const getUsers = async (req, res) => {
-  try {
-    const { data, error } = await supabase.from('users').select('*');
-    if (error) throw error;
-    res.json(data);
-  } catch (err) {
-    console.error('Error fetching users:', err.message);
-    res.status(500).json({ message: 'Gagal mengambil data user' });
+  const { data, error } = await supabase.from("users").select("*");
+  if (error) {
+    console.error("❌ Error fetching users:", error.message);
+    return res.status(500).json({ error: error.message });
   }
+  res.json(data);
 };
 
-// Add new user
+// 🔹 POST tambah user
 export const createUser = async (req, res) => {
-  try {
-    const { name, email } = req.body;
+  const { nama, email, password, no_hp, alamat, role } = req.body;
 
-    if (!name || !email)
-      return res.status(400).json({ message: 'Nama dan email wajib diisi' });
-
-    const { data, error } = await supabase.from('users').insert([{ name, email }]);
-
-    if (error) throw error;
-
-    res.status(201).json({ message: 'User berhasil ditambahkan', data });
-  } catch (err) {
-    console.error('Error adding user:', err.message);
-    res.status(500).json({ message: 'Gagal menambah user' });
+  if (!nama || !email || !password) {
+    return res.status(400).json({ error: "Nama, email, dan password wajib diisi" });
   }
+
+  const { data, error } = await supabase
+    .from("users")
+    .insert([
+      {
+        nama,
+        email,
+        password,
+        no_hp,
+        alamat,
+        role: role || "donatur",
+        status: true,
+      },
+    ])
+    .select();
+
+  if (error) {
+    console.error("❌ Error inserting user:", error.message);
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.status(201).json(data[0]);
 };
