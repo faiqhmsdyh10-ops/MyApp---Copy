@@ -27,6 +27,12 @@ body {
   font-family: "Poppins", sans-serif;
   margin: 0;
   display: flex;
+
+/* Tailwind base, components and utilities. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
   justify-content: center;
   align-items: center;
   height: 100vh;

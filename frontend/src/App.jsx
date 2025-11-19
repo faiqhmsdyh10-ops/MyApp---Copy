@@ -1,42 +1,52 @@
 import React, { useState } from "react";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import LoginForm from "./components/LoginForm";
 import RegisterForm from "./components/RegisterForm";
 import Dashboard from "./components/Dashboard";
 
 const App = () => {
-  const [page, setPage] = useState("login");
   const [loggedInUser, setLoggedInUser] = useState(null);
+  const navigate = useNavigate();
 
   const handleLogin = (user) => {
     setLoggedInUser(user);
-    setPage("dashboard");
+    // navigate to dashboard after successful login
+    navigate("/dashboard");
   };
 
   const handleLogout = () => {
     setLoggedInUser(null);
-    setPage("login");
+    navigate("/login");
   };
 
   return (
     <div className="min-h-screen">
-      {page === "login" && (
-        <LoginForm
-          onLogin={handleLogin}
-          onSwitchToRegister={() => setPage("register")}
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+
+        <Route
+          path="/login"
+          element={<LoginForm onLogin={handleLogin} onSwitchToRegister={() => navigate('/register')} />}
         />
-      )}
-      {page === "register" && (
-        <RegisterForm
-          onSwitchToLogin={() => setPage("login")}
-          onRegisterSuccess={(user) => {
-            setLoggedInUser(user);
-            setPage("dashboard");
-          }}
+
+        <Route
+          path="/register"
+          element={<RegisterForm onSwitchToLogin={() => navigate('/login')} onRegisterSuccess={(user) => { setLoggedInUser(user); navigate('/dashboard'); }} />}
         />
-      )}
-      {page === "dashboard" && (
-        <Dashboard user={loggedInUser} onLogout={handleLogout} />
-      )}
+
+        <Route
+          path="/dashboard"
+          element={
+            loggedInUser ? (
+              <Dashboard user={loggedInUser} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </div>
   );
 };
