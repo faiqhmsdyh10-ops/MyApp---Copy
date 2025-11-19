@@ -18,7 +18,7 @@ const App = () => {
   };
 
   return (
-    <div className="app-container">
+    <div className="min-h-screen">
       {page === "login" && (
         <LoginForm
           onLogin={handleLogin}
@@ -26,7 +26,7 @@ const App = () => {
         />
       )}
       {page === "register" && (
-        <RegisterForm 
+        <RegisterForm
           onSwitchToLogin={() => setPage("login")}
           onRegisterSuccess={(user) => {
             setLoggedInUser(user);

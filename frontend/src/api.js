@@ -51,3 +51,21 @@ export const createDonation = async (donationData) => {
   })
   return res.json()
 }
+
+export const getDashboardSummary = async () => {
+  try {
+    const res = await fetch(`${API_URL}/dashboard/summary`)
+    const payload = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      throw new Error(payload.error || 'Gagal memuat ringkasan dashboard')
+    }
+    return payload?.data || {
+      totalDonors: 0,
+      totalGoods: 0,
+      totalServices: 0,
+      totalMoney: 0
+    }
+  } catch (error) {
+    throw error
+  }
+}
