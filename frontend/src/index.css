@@ -15,27 +15,29 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
   text-decoration: inherit;
 }
 a:hover {
   color: #535bf2;
 }
 
-body {
-  background: linear-gradient(to right, #e3f2fd, #bbdefb);
-  font-family: "Poppins", sans-serif;
-  margin: 0;
-  display: flex;
-
 /* Tailwind base, components and utilities. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+body {
+  font-family: "Poppins", sans-serif;
+  margin: 0;
+}
+
+/* Login/Register form layout centering */
+#root > div:has(.form-container) {
+  background: linear-gradient(to right, #e3f2fd, #bbdefb);
+  display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  min-height: 100vh;
 }
 
 .form-container {
@@ -63,7 +65,8 @@ select {
   font-size: 14px;
 }
 
-button {
+/* Scope default form button styles so they don't override global utility classes */
+.form-container button {
   background: #1976d2;
   color: white;
   border: none;
@@ -76,7 +79,7 @@ button {
   font-weight: 600;
 }
 
-button:hover {
+.form-container button:hover {
   background: #1565c0;
 }
 

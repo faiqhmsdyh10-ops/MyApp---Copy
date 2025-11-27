@@ -1,29 +1,32 @@
-import React, { useState } from "react";
+import React from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import LoginForm from "./components/LoginForm";
 import RegisterForm from "./components/RegisterForm";
-import Dashboard from "./components/Dashboard";
+import Home from "./pages/Home";
+import AksiBerjalan from "./pages/AksiBerjalan";
+import AksiDetail from "./pages/AksiDetail";
+import Relawan from "./pages/Relawan";
+import TentangKami from "./pages/TentangKami";
 
 const App = () => {
-  const [loggedInUser, setLoggedInUser] = useState(null);
   const navigate = useNavigate();
 
-  const handleLogin = (user) => {
-    setLoggedInUser(user);
-    // navigate to dashboard after successful login
-    navigate("/dashboard");
-  };
-
-  const handleLogout = () => {
-    setLoggedInUser(null);
-    navigate("/login");
+  const handleLogin = () => {
+    // navigate to home after successful login
+    navigate("/");
   };
 
   return (
     <div className="min-h-screen">
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        {/* Public Routes */}
+        <Route path="/" element={<Home />} />
+        <Route path="/aksi-berjalan" element={<AksiBerjalan />} />
+        <Route path="/aksi/:id" element={<AksiDetail />} />
+        <Route path="/relawan" element={<Relawan />} />
+        <Route path="/tentang-kami" element={<TentangKami />} />
 
+        {/* Auth Routes */}
         <Route
           path="/login"
           element={<LoginForm onLogin={handleLogin} onSwitchToRegister={() => navigate('/register')} />}
@@ -31,20 +34,10 @@ const App = () => {
 
         <Route
           path="/register"
-          element={<RegisterForm onSwitchToLogin={() => navigate('/login')} onRegisterSuccess={(user) => { setLoggedInUser(user); navigate('/dashboard'); }} />}
+          element={<RegisterForm onSwitchToLogin={() => navigate('/login')} onRegisterSuccess={() => navigate("/")} />}
         />
 
-        <Route
-          path="/dashboard"
-          element={
-            loggedInUser ? (
-              <Dashboard user={loggedInUser} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
-
+        {/* Catch All */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>

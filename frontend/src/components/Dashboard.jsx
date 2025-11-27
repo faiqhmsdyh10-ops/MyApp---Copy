@@ -11,7 +11,7 @@ const formatCurrency = (value) =>
     maximumFractionDigits: 0,
   }).format(value || 0);
 
-const Dashboard = ({ user, onLogout }) => {
+const Dashboard = () => {
   const [summary, setSummary] = useState({
     totalDonors: 0,
     totalGoods: 0,
@@ -56,40 +56,6 @@ const Dashboard = ({ user, onLogout }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 text-black font-inter">
-      {/* Navbar */}
-      <nav className="fixed top-0 z-50 w-full bg-white shadow-md border-b border-gray-200">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-center space-x-2 text-lg font-bold text-gray-800">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-white font-bold">
-              RB
-            </span>
-            <span>RuangBerbagi</span>
-          </div>
-          <div className="hidden md:flex items-center space-x-8 text-gray-700 font-medium">
-            <a href="#aksi" className="hover:text-blue-600 transition-colors">Aksi Berjalan</a>
-            <a href="#relawan" className="hover:text-blue-600 transition-colors">Relawan</a>
-            <a href="#tentang" className="hover:text-blue-600 transition-colors">Tentang Kami</a>
-          </div>
-          <div>
-            {user ? (
-              <button
-                onClick={onLogout}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-              >
-                Keluar
-              </button>
-            ) : (
-              <a
-                href="#login"
-                className="border border-blue-600 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition"
-              >
-                Masuk
-              </a>
-            )}
-          </div>
-        </div>
-      </nav>
-
       {/* Hero Section */}
       <section className="pt-28 pb-20 bg-gradient-to-r from-white via-blue-50 to-blue-100">
         <div className="max-w-6xl mx-auto px-6 text-center">
