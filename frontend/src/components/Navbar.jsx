@@ -7,6 +7,17 @@ const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Detect scroll to change navbar background
+  useEffect(() => {
+    const onScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    onScroll(); // initial
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     // Check login status
@@ -39,13 +50,13 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="fixed top-0 z-50 w-full bg-white shadow-md border-b border-gray-200">
-      <div className="mx-auto flex items-center justify-between max-w-7xl px-6 py-4">
+    <nav className={`fixed top-0 z-50 w-full transition-colors ${isScrolled ? "bg-white shadow" : "bg-transparent"}`}>
+      <div className="flex items-center justify-between max-w-7xl px-0 mx-24 py-2">
         <div className="flex items-center">
           {/* Logo */}
           <button
             onClick={() => navigate("/")}
-            className="flex items-center bg-white space-x-2 text-lg font-bold text-gray-800 hover:bg-white"
+            className={`flex items-center bg-none space-x-2 text-sm font-medium ${isScrolled ? "text-gray-900" : "text-white"}`}
           >
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-white font-bold">
               RB
@@ -59,10 +70,10 @@ const Navbar = () => {
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`font-medium whitespace-nowrap transition-colors px-2 py-1 rounded ${
+                className={`font-regular text-sm whitespace-nowrap transition-colors px-2 py-0 rounded ${
                   isActive(item.path)
-                    ? "text-blue-600 border-b-2 border-blue-600"
-                    : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                    ? isScrolled ? "text-blue-600" : "text-white"
+                    : isScrolled ? "text-gray-700 hover:text-blue-600" : "text-white hover:text-blue-200"
                 }`}
               >
                 {item.label}
@@ -77,7 +88,7 @@ const Navbar = () => {
             <div className="relative">
               <button
                 onClick={() => setShowDropdown(!showDropdown)}
-                className="flex items-center space-x-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full hover:bg-blue-100 transition"
+                className={`flex items-center text-sm space-x-2 ${isScrolled ? "bg-blue-50 text-blue-700" : "bg-white/20 text-white"} px-4 py-2 rounded-full hover:bg-white hover:text-black transition`}
               >
                 <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
                   {userData.name?.charAt(0).toUpperCase() || userData.email?.charAt(0).toUpperCase() || "U"}
@@ -129,7 +140,7 @@ const Navbar = () => {
           ) : (
             <button
               onClick={() => navigate("/login")}
-              className="ml-4 bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition"
+              className={`ml-4 ${isScrolled ? "bg-blue-600 text-white" : "bg-white/20 text-white"} px-4 py-2 rounded-full hover:bg-blue-700 transition`}
             >
               Masuk
             </button>

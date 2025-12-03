@@ -18,21 +18,32 @@ const AksiDetail = () => {
     
     if (!isLoggedIn) {
       setShowLoginModal(true);
-    } else {
-      // Navigate to donation page with aksi id
-      navigate(`/donasi/${id}`);
+      return;
     }
+
+    // Check status aksi
+    if (aksi.status === "ditutup") {
+      alert("Maaf, donasi untuk aksi ini sudah ditutup.");
+      return;
+    }
+    if (aksi.status === "selesai") {
+      alert("Donasi untuk aksi ini sudah selesai.");
+      return;
+    }
+
+    // Navigate to donation page with aksi id
+    navigate(`/donasi/${id}`);
   };
 
   useEffect(() => {
     const fetchAksiDetail = async () => {
       try {
         setLoading(true);
-        
+
         // Get from localStorage first
         const localAksi = JSON.parse(localStorage.getItem("aksiList") || "[]");
         const aksiFromLocal = localAksi.find((d) => d.id === parseInt(id));
-        
+
         // Then try to get from API
         let aksiFromAPI = null;
         try {
@@ -41,20 +52,31 @@ const AksiDetail = () => {
         } catch (err) {
           console.warn("Could not fetch from API:", err);
         }
-        
+
         // Use localStorage data if available, otherwise API data
         const aksiData = aksiFromLocal || aksiFromAPI;
-        
+
         if (aksiData) {
           setAksi(aksiData);
-          // Mock recent donors (in real app, fetch from API)
-          setRecentDonors([
-            { name: "Ahmad Wijaya", amount: "Rp 500.000", date: "2 jam lalu" },
-            { name: "Siti Nurhaliza", amount: "5 Barang", date: "4 jam lalu" },
-            { name: "Budi Santoso", amount: "Rp 250.000", date: "1 hari lalu" },
-            { name: "Eka Putri", amount: "Rp 1.000.000", date: "2 hari lalu" },
-            { name: "Rudi Hassan", amount: "3 Barang", date: "3 hari lalu" },
-          ]);
+
+          // Ambil donatur terbaru dari localStorage
+          const donations = JSON.parse(localStorage.getItem("donations") || "[]");
+          const recent = donations
+            .filter(d => d.aksiId === aksiData.id)
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .slice(0, 5)
+            .map(d => ({
+              name: d.namaLengkap || d.email || "Donatur",
+              amount: d.tipeDonasi === "Uang"
+                ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(parseInt(d.jumlahDonasi))
+                : d.tipeDonasi === "Barang"
+                  ? `${d.selectedBarang?.length || 0} Barang`
+                  : d.tipeDonasi === "Jasa"
+                    ? `${d.selectedJasa?.length || 0} Jasa`
+                    : "-",
+              date: new Date(d.createdAt).toLocaleString("id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
+            }));
+          setRecentDonors(recent);
           setError("");
         } else {
           setError("Aksi tidak ditemukan");
@@ -203,12 +225,29 @@ const AksiDetail = () => {
 
                 {/* Action Buttons */}
                 <div className="space-y-3 mb-6 pb-6 border-b">
-                  <button 
-                    onClick={handleDonateClick}
-                    className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-medium"
-                  >
-                    Ikut Berdonasi
-                  </button>
+                  {/* Tombol Donasi - Dinamis berdasarkan status */}
+                  {aksi.status === "selesai" ? (
+                    <button 
+                      disabled
+                      className="w-full bg-green-600 text-white py-2 rounded-lg font-medium cursor-not-allowed opacity-90"
+                    >
+                      ✓ Donasi Selesai
+                    </button>
+                  ) : aksi.status === "ditutup" ? (
+                    <button 
+                      disabled
+                      className="w-full bg-red-600 text-white py-2 rounded-lg font-medium cursor-not-allowed opacity-90"
+                    >
+                      ✕ Donasi Ditutup
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={handleDonateClick}
+                      className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-medium"
+                    >
+                      Ikut Berdonasi
+                    </button>
+                  )}
                   <button className="w-full border border-blue-600 text-blue-600 py-2 rounded-lg hover:bg-blue-50 transition font-medium">
                     Bagikan Aksi
                   </button>

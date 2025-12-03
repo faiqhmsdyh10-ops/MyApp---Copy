@@ -40,6 +40,17 @@ const DonasiPage = () => {
     const aksiData = localAksi.find((a) => a.id === parseInt(id));
     
     if (aksiData) {
+      // Cek status aksi
+      if (aksiData.status === "ditutup") {
+        alert("Maaf, donasi untuk aksi ini sudah ditutup.");
+        navigate(`/aksi/${id}`);
+        return;
+      }
+      if (aksiData.status === "selesai") {
+        alert("Donasi untuk aksi ini sudah selesai.");
+        navigate(`/aksi/${id}`);
+        return;
+      }
       setAksi(aksiData);
     } else {
       alert("Aksi tidak ditemukan");
@@ -144,6 +155,17 @@ const DonasiPage = () => {
     const donations = JSON.parse(localStorage.getItem("donations") || "[]");
     donations.push(donation);
     localStorage.setItem("donations", JSON.stringify(donations));
+
+    // Update progress donasi uang pada aksi terkait
+    if (donationType === "Uang") {
+      const aksiList = JSON.parse(localStorage.getItem("aksiList") || "[]");
+      const aksiIndex = aksiList.findIndex(a => a.id === aksi.id);
+      if (aksiIndex !== -1) {
+        const jumlahDonasi = parseInt(formData.jumlahDonasi) || 0;
+        aksiList[aksiIndex].donasiTerkumpul = (aksiList[aksiIndex].donasiTerkumpul || 0) + jumlahDonasi;
+        localStorage.setItem("aksiList", JSON.stringify(aksiList));
+      }
+    }
 
     alert("Terima kasih! Donasi Anda berhasil dicatat.");
     navigate("/");
