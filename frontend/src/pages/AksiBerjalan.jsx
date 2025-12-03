@@ -16,9 +16,23 @@ const AksiBerjalan = () => {
     const fetchDonations = async () => {
       try {
         setLoading(true);
-        const data = await getDonations();
-        setDonations(data || []);
-        setFilteredDonations(data || []);
+        
+        // First, get from localStorage (admin-created aksi)
+        const localAksi = JSON.parse(localStorage.getItem("aksiList") || "[]");
+        
+        // Then get from API
+        let apiData = [];
+        try {
+          apiData = await getDonations();
+        } catch (err) {
+          console.warn("Could not fetch from API:", err);
+        }
+        
+        // Merge both sources, prioritize localStorage
+        const merged = [...localAksi, ...apiData];
+        
+        setDonations(merged || []);
+        setFilteredDonations(merged || []);
         setError("");
       } catch (err) {
         console.error("Gagal memuat aksi berjalan:", err);

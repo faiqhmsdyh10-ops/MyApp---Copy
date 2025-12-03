@@ -8,6 +8,15 @@ import AksiDetail from "./pages/AksiDetail";
 import Relawan from "./pages/Relawan";
 import TentangKami from "./pages/TentangKami";
 
+// Admin Pages
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import KelolaAksi from "./pages/admin/KelolaAksi";
+import TambahAksi from "./pages/admin/TambahAksi";
+import KelolaRelawan from "./pages/admin/KelolaRelawan";
+import LaporanAksi from "./pages/admin/LaporanAksi";
+
 const App = () => {
   const navigate = useNavigate();
 
@@ -36,6 +45,17 @@ const App = () => {
           path="/register"
           element={<RegisterForm onSwitchToLogin={() => navigate('/login')} onRegisterSuccess={() => navigate("/")} />}
         />
+
+        {/* Admin Routes */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="kelola-aksi" element={<KelolaAksi />} />
+          <Route path="tambah-aksi" element={<TambahAksi />} />
+          <Route path="kelola-relawan" element={<KelolaRelawan />} />
+          <Route path="laporan" element={<LaporanAksi />} />
+        </Route>
 
         {/* Catch All */}
         <Route path="*" element={<Navigate to="/" replace />} />
