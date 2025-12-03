@@ -26,6 +26,15 @@ const RegisterForm = ({ onSwitchToLogin, onRegisterSuccess }) => {
     try {
       const response = await registerUser(formData);
       if (response.success && response.user) {
+        // Save login state to localStorage after successful registration
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("userToken", response.token || "dummy-token");
+        localStorage.setItem("userData", JSON.stringify({
+          name: formData.nama,
+          email: formData.email,
+          ...response.user
+        }));
+        
         // Jika registrasi berhasil, langsung arahkan ke dashboard
         setLoading(false);
         onRegisterSuccess(response.user);

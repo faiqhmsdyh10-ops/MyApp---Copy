@@ -5,6 +5,7 @@ import RegisterForm from "./components/RegisterForm";
 import Home from "./pages/Home";
 import AksiBerjalan from "./pages/AksiBerjalan";
 import AksiDetail from "./pages/AksiDetail";
+import DonasiPage from "./pages/DonasiPage";
 import Relawan from "./pages/Relawan";
 import TentangKami from "./pages/TentangKami";
 
@@ -32,6 +33,7 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/aksi-berjalan" element={<AksiBerjalan />} />
         <Route path="/aksi/:id" element={<AksiDetail />} />
+        <Route path="/donasi/:id" element={<DonasiPage />} />
         <Route path="/relawan" element={<Relawan />} />
         <Route path="/tentang-kami" element={<TentangKami />} />
 

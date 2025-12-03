@@ -44,6 +44,12 @@ const LoginForm = ({ onLogin, onSwitchToRegister }) => {
 
     try {
       const response = await loginUser({ email, password });
+      
+      // Save login state to localStorage
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("userToken", response.token || "dummy-token");
+      localStorage.setItem("userData", JSON.stringify(response.user || { email, name: email.split('@')[0] }));
+      
       onLogin(response.user);
     } catch (err) {
       setError(err.message || "Email atau password salah");

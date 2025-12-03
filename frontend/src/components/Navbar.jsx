@@ -1,9 +1,33 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userData, setUserData] = useState(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  useEffect(() => {
+    // Check login status
+    const loggedIn = localStorage.getItem("isLoggedIn");
+    const userDataStr = localStorage.getItem("userData");
+    
+    if (loggedIn && userDataStr) {
+      setIsLoggedIn(true);
+      setUserData(JSON.parse(userDataStr));
+    }
+  }, [location]); // Re-check when location changes
+
+  const handleLogout = () => {
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("userToken");
+    localStorage.removeItem("userData");
+    setIsLoggedIn(false);
+    setUserData(null);
+    setShowDropdown(false);
+    navigate("/");
+  };
 
   const isActive = (path) => location.pathname === path;
 
@@ -47,11 +71,69 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Right side (login button) */}
+        {/* Right side (login button or user menu) */}
         <div className="hidden md:flex items-center">
-          <button onClick={() => navigate('/login')} className="ml-4 bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition">
-            Masuk
-          </button>
+          {isLoggedIn && userData ? (
+            <div className="relative">
+              <button
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="flex items-center space-x-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full hover:bg-blue-100 transition"
+              >
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  {userData.name?.charAt(0).toUpperCase() || userData.email?.charAt(0).toUpperCase() || "U"}
+                </div>
+                <span className="font-medium">
+                  {userData.name || userData.email?.split('@')[0] || "User"}
+                </span>
+                <svg
+                  className={`w-4 h-4 transition-transform ${showDropdown ? "rotate-180" : ""}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Dropdown Menu */}
+              {showDropdown && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                  <button
+                    onClick={() => {
+                      setShowDropdown(false);
+                      navigate("/profil");
+                    }}
+                    className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 transition"
+                  >
+                    👤 Profil Saya
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDropdown(false);
+                      navigate("/donasi-saya");
+                    }}
+                    className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 transition"
+                  >
+                    💝 Donasi Saya
+                  </button>
+                  <hr className="my-2" />
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition"
+                  >
+                    🚪 Keluar
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={() => navigate("/login")}
+              className="ml-4 bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition"
+            >
+              Masuk
+            </button>
+          )}
         </div>
       </div>
     </nav>
