@@ -100,11 +100,15 @@ const AksiDetail = () => {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
-      <div className="pt-20">
+      <div className="pt-0">
         {/* Hero Image */}
-        <div className="w-full h-96 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-8xl">
+        <div className="w-full h-96 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-8xl relative">
           {aksi.image ? (
-            <img src={aksi.image} alt={aksi.judul} className="w-full h-full object-cover" />
+            <>
+              <img src={aksi.image} alt={aksi.judul} className="w-full h-full object-cover" />
+              {/* Gradient Overlay: hitam di atas, transparan di bawah */}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black/50 to-transparent"></div>
+            </>
           ) : (
             "🤝"
           )}
@@ -115,10 +119,35 @@ const AksiDetail = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column (3/4) - Content */}
             <div className="lg:col-span-2">
-              {/* Category Badge */}
-              <div className="inline-block bg-blue-100 text-blue-600 text-sm font-semibold px-4 py-1 rounded-full mb-4">
-                {aksi.tipe || aksi.category || "Umum"}
-              </div>
+              {/* Category Badges - Multiple dengan warna berbeda */}
+              {(() => {
+                const tipe = aksi.tipe || aksi.category || "Umum";
+                const kategoriRaw = aksi.kategori || tipe || "Umum";
+                const kategoriArray = Array.isArray(kategoriRaw) 
+                  ? kategoriRaw 
+                  : (typeof kategoriRaw === 'string' ? kategoriRaw.split(',').map(k => k.trim()) : [String(kategoriRaw)]);
+
+                const getBadgeColor = (type) => {
+                  const normalizedType = type.toLowerCase();
+                  if (normalizedType.includes('uang')) return 'bg-green-50 text-green-700 border border-green-700';
+                  if (normalizedType.includes('barang')) return 'bg-blue-50 text-blue-700 border border-blue-700';
+                  if (normalizedType.includes('jasa')) return 'bg-purple-50 text-purple-700 border border-purple-700';
+                  return 'bg-gray-100 text-gray-700';
+                };
+
+                return (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {kategoriArray.map((kategori, idx) => (
+                      <span 
+                        key={idx} 
+                        className={`text-xs tracking-wide px-3 py-1 rounded-full ${getBadgeColor(kategori)}`}
+                      >
+                        {kategori}
+                      </span>
+                    ))}
+                  </div>
+                );
+              })()}
 
               {/* Title */}
               <h1 className="text-4xl font-bold text-gray-900 mb-6">{aksi.judul || aksi.title}</h1>
@@ -154,7 +183,7 @@ const AksiDetail = () => {
 
             {/* Right Column (1/4) - Donation Info Sidebar */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-md p-6 sticky top-24">
+              <div className="bg-white rounded-3xl border p-6 sticky top-24">
                 {/* Target & Progress - Only if Uang kategori */}
                 {(aksi.kategori?.includes("Uang") || aksi.tipe?.includes("Uang")) && (
                   <div className="mb-6">
@@ -190,15 +219,14 @@ const AksiDetail = () => {
                 {/* Barang Dibutuhkan - Only if Barang kategori */}
                 {aksi.barangDibutuhkan && (aksi.kategori?.includes("Barang") || aksi.tipe?.includes("Barang")) && (
                   <div className="mb-6 pb-6 border-b">
-                    <h3 className="font-bold text-gray-900 mb-3">📦 Barang Dibutuhkan</h3>
-                    <ul className="space-y-2 text-sm text-gray-700">
+                    <h3 className="font-bold text-gray-900 mb-3">Barang Dibutuhkan</h3>
+                    <ul className="flex flex-wrap gap-2 text-sm text-gray-700">
                       {(typeof aksi.barangDibutuhkan === 'string' 
                         ? aksi.barangDibutuhkan.split(", ")
                         : aksi.barangDibutuhkan
                       ).filter(b => b.trim()).map((item, idx) => (
                         <li key={idx} className="flex items-start">
-                          <span className="text-blue-600 mr-2">✓</span>
-                          <span>{item}</span>
+                          <span className="border border-gray-400 rounded-full py-1.5 px-4">{item}</span>
                         </li>
                       ))}
                     </ul>
@@ -208,15 +236,14 @@ const AksiDetail = () => {
                 {/* Jasa Dibutuhkan - Only if Jasa kategori */}
                 {aksi.jasaDibutuhkan && (aksi.kategori?.includes("Jasa") || aksi.tipe?.includes("Jasa")) && (
                   <div className="mb-6 pb-6 border-b">
-                    <h3 className="font-bold text-gray-900 mb-3">🛠️ Jasa Dibutuhkan</h3>
-                    <ul className="space-y-2 text-sm text-gray-700">
+                    <h3 className="font-bold text-gray-900 mb-3">Jasa Dibutuhkan</h3>
+                    <ul className="flex flex-wrap gap-2 text-sm text-gray-700">
                       {(typeof aksi.jasaDibutuhkan === 'string' 
                         ? aksi.jasaDibutuhkan.split(", ")
                         : aksi.jasaDibutuhkan
                       ).filter(j => j.trim()).map((item, idx) => (
                         <li key={idx} className="flex items-start">
-                          <span className="text-green-600 mr-2">✓</span>
-                          <span>{item}</span>
+                          <span className="border border-gray-400 rounded-full py-1.5 px-4">{item}</span>
                         </li>
                       ))}
                     </ul>
@@ -229,26 +256,26 @@ const AksiDetail = () => {
                   {aksi.status === "selesai" ? (
                     <button 
                       disabled
-                      className="w-full bg-green-600 text-white py-2 rounded-lg font-medium cursor-not-allowed opacity-90"
+                      className="w-full bg-green-600 text-white py-2 rounded-full font-medium cursor-not-allowed opacity-90"
                     >
-                      ✓ Donasi Selesai
+                      Donasi Selesai
                     </button>
                   ) : aksi.status === "ditutup" ? (
                     <button 
                       disabled
-                      className="w-full bg-red-600 text-white py-2 rounded-lg font-medium cursor-not-allowed opacity-90"
+                      className="w-full bg-red-600 text-white py-2 rounded-full font-medium cursor-not-allowed opacity-90"
                     >
-                      ✕ Donasi Ditutup
+                      Donasi Ditutup
                     </button>
                   ) : (
                     <button 
                       onClick={handleDonateClick}
-                      className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-medium"
+                      className="w-full bg-blue-600 text-white py-2 rounded-full hover:bg-blue-700 transition font-medium"
                     >
                       Ikut Berdonasi
                     </button>
                   )}
-                  <button className="w-full border border-blue-600 text-blue-600 py-2 rounded-lg hover:bg-blue-50 transition font-medium">
+                  <button className="w-full border border-blue-600 text-blue-600 py-2 rounded-full hover:bg-blue-50 transition font-medium">
                     Bagikan Aksi
                   </button>
                 </div>

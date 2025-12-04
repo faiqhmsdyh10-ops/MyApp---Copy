@@ -8,6 +8,8 @@ const DonasiPage = () => {
   const [aksi, setAksi] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [donationType, setDonationType] = useState("");
+  const [timeRemaining, setTimeRemaining] = useState(300); // 5 menit = 300 detik
+  const [timerActive, setTimerActive] = useState(false);
   
   const [formData, setFormData] = useState({
     // Step 1: Data Diri
@@ -57,6 +59,37 @@ const DonasiPage = () => {
       navigate("/aksi-berjalan");
     }
   }, [id, navigate]);
+
+  // Timer countdown untuk donasi uang di step 3
+  useEffect(() => {
+    if (currentStep === 3 && donationType === "Uang" && timerActive) {
+      if (timeRemaining <= 0) {
+        alert("Waktu pembayaran habis! Anda akan diarahkan kembali ke halaman aksi.");
+        navigate(`/aksi/${id}`);
+        return;
+      }
+
+      const timer = setInterval(() => {
+        setTimeRemaining((prev) => prev - 1);
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [currentStep, donationType, timerActive, timeRemaining, navigate, id]);
+
+  // Activate timer when entering step 3 with Uang donation
+  useEffect(() => {
+    if (currentStep === 3 && donationType === "Uang") {
+      setTimerActive(true);
+      setTimeRemaining(300); // Reset ke 5 menit
+    }
+  }, [currentStep, donationType]);
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -162,7 +195,18 @@ const DonasiPage = () => {
       const aksiIndex = aksiList.findIndex(a => a.id === aksi.id);
       if (aksiIndex !== -1) {
         const jumlahDonasi = parseInt(formData.jumlahDonasi) || 0;
-        aksiList[aksiIndex].donasiTerkumpul = (aksiList[aksiIndex].donasiTerkumpul || 0) + jumlahDonasi;
+        const currentDonasi = aksiList[aksiIndex].donasiTerkumpul || 0;
+        const newTotal = currentDonasi + jumlahDonasi;
+        const targetDonasi = aksiList[aksiIndex].targetDonasi || 0;
+        
+        aksiList[aksiIndex].donasiTerkumpul = newTotal;
+        
+        // Auto-update status jika mencapai 100%
+        if (targetDonasi > 0 && newTotal >= targetDonasi) {
+          aksiList[aksiIndex].status = "selesai";
+          alert("🎉 Selamat! Aksi donasi telah mencapai 100% dan statusnya diubah menjadi SELESAI.");
+        }
+        
         localStorage.setItem("aksiList", JSON.stringify(aksiList));
       }
     }
@@ -180,76 +224,142 @@ const DonasiPage = () => {
     );
   }
 
+  
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <Navbar />
 
-      <div className="pt-20">
-        {/* Hero Section */}
-        <div className="bg-gradient-to-br from-blue-400 to-blue-600 text-white py-12">
-          <div className="max-w-4xl mx-auto px-6">
-            <div className="flex items-center gap-6">
-              {aksi.image && (
-                <img
-                  src={aksi.image}
-                  alt={aksi.judul}
-                  className="w-32 h-32 object-cover rounded-lg shadow-lg"
-                />
+      {/* Hero Background yang memanjang */}
+      <div className="relative">
+        {/* Hero Section sebagai Background - Extended */}
+        <div 
+          className="absolute top-0 left-0 w-full bg-gradient-to-br from-blue-400 to-blue-600 bg-cover bg-center"
+          style={{ 
+            backgroundImage: aksi.image ? `url(${aksi.image})` : 'none',
+            height: '800px' // Tinggi hero yang memanjang
+          }}
+        >
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/50 to-black/20"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-white via-white/30 to-transparent"></div>
+        </div>
+
+        {/* Content di atas hero background */}
+        <div className="relative z-10 pt-0">
+          {/* Hero Title Section */}
+          <div className="w-full h-96 flex items-end justify-center">
+            <div className="max-w-6xl mb-12 text-center px-6">
+              {aksi.image ? (
+                <>
+                  <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 drop-shadow-lg">
+                    {aksi.judul || aksi.title || "Aksi Kebaikan"}
+                  </h1>
+                </>
+              ) : (
+                <div className="text-8xl">🤝</div>
               )}
-              <div>
-                <h1 className="text-3xl font-bold mb-2">{aksi.judul}</h1>
-                <p className="text-blue-100">
-                  Mari bersama membantu mewujudkan perubahan positif
-                </p>
+            </div>
+          </div>
+        
+        {/* Form Content */}
+        <div className="max-w-4xl bg-white mx-auto px-6 pb-12 border rounded-3xl">
+          <div className="bg-white rounded-lg p-8">
+                                <button
+                      onClick={() => navigate(`/aksi/${id}`)}
+                      className="border border-blue-600 text-blue-600 px-6 py-2 rounded-full hover:bg-blue-50 transition font-medium"
+                    >
+                      Ke Halaman Aksi
+                    </button>
+            {/* Progress Steps - Custom Modern Stepper */}
+            <div className="bg-white py-8">
+              <div className="max-w-4xl mx-auto px-6">
+                <div className="flex items-center justify-between">
+                  {/* Step 1 */}
+                  <div className="flex items-center flex-1">
+                    <div className="flex flex-col items-center">
+                      <div className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 font-bold transition-all ${
+                        currentStep >= 1 
+                          ? "bg-blue-100 border-blue-600 text-blue-600" 
+                          : "bg-white border-gray-300 text-gray-400"
+                      }`}>
+                        {currentStep > 1 ? (
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <span className="text-lg">1</span>
+                        )}
+                      </div>
+                    </div>
+                      <div className="ml-4 text-center">
+                        <p className={`font-medium text-sm ${currentStep >= 1 ? "text-blue-600" : "text-gray-400"}`}>
+                          Data Diri
+                        </p>
+                      </div>
+                    <div className={`flex-1 h-1 mx-4 transition-all ${
+                      currentStep > 1 ? "bg-blue-600" : "bg-gray-200"
+                    }`}></div>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className="flex items-center flex-1">
+                    <div className="flex flex-col items-center">
+                      <div className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 font-bold transition-all ${
+                        currentStep >= 2 
+                          ? "bg-blue-100 border-blue-600 text-blue-600" 
+                          : "bg-white border-gray-300 text-gray-400"
+                      }`}>
+                        {currentStep > 2 ? (
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <span className="text-lg">2</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="ml-4 text-center">
+                      <p className={`font-medium text-sm ${currentStep >= 2 ? "text-blue-600" : "text-gray-400"}`}>
+                        Donasi
+                      </p>
+                    </div>
+                    <div className={`flex-1 h-1 mx-4 transition-all ${
+                      currentStep > 2 ? "bg-blue-600" : "bg-gray-200"
+                    }`}></div>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="flex items-center">
+                    <div className="flex flex-col items-center">
+                      <div className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 font-bold transition-all ${
+                        currentStep >= 3 
+                          ? "bg-blue-100 border-blue-600 text-blue-600" 
+                          : "bg-white border-gray-300 text-gray-400"
+                      }`}>
+                        {currentStep > 3 ? (
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <span className="text-lg">3</span>
+                        )}
+                        
+                      </div>
+                    </div>
+                    <div className="ml-4 text-center">
+                      <p className={`font-medium text-sm ${currentStep >= 3 ? "text-blue-600" : "text-gray-400"}`}>
+                        Konfirmasi
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Progress Steps */}
-        <div className="bg-white border-b">
-          <div className="max-w-4xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              {[1, 2, 3].map((step) => (
-                <div key={step} className="flex items-center flex-1">
-                  <div className="flex items-center">
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                        currentStep >= step
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-200 text-gray-500"
-                      }`}
-                    >
-                      {step}
-                    </div>
-                    <span
-                      className={`ml-3 font-medium ${
-                        currentStep >= step ? "text-blue-600" : "text-gray-500"
-                      }`}
-                    >
-                      {step === 1 ? "Data Diri" : step === 2 ? "Donasi" : "Konfirmasi"}
-                    </span>
-                  </div>
-                  {step < 3 && (
-                    <div
-                      className={`flex-1 h-1 mx-4 ${
-                        currentStep > step ? "bg-blue-600" : "bg-gray-200"
-                      }`}
-                    ></div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Form Content */}
-        <div className="max-w-4xl mx-auto px-6 py-12">
-          <div className="bg-white rounded-lg shadow-md p-8">
             {/* Step 1: Data Diri */}
             {currentStep === 1 && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Data Diri</h2>
+              <div className="space-y-6 px-6 mt-8">
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -261,7 +371,7 @@ const DonasiPage = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, namaLengkap: e.target.value })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full bg-white px-4 py-2 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Masukkan nama lengkap Anda"
                   />
                 </div>
@@ -274,7 +384,7 @@ const DonasiPage = () => {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full bg-white text-black px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="email@example.com"
                   />
                 </div>
@@ -287,7 +397,7 @@ const DonasiPage = () => {
                     type="tel"
                     value={formData.noHp}
                     onChange={(e) => setFormData({ ...formData, noHp: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full bg-white text-black px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="08123456789"
                   />
                 </div>
@@ -295,7 +405,7 @@ const DonasiPage = () => {
                 <div className="flex justify-end pt-4">
                   <button
                     onClick={handleNextStep}
-                    className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition font-medium"
+                    className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition font-medium"
                   >
                     Lanjutkan
                   </button>
@@ -305,8 +415,7 @@ const DonasiPage = () => {
 
             {/* Step 2: Donasi */}
             {currentStep === 2 && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Informasi Donasi</h2>
+              <div className="space-y-6 px-6 mt-8">
 
                 {/* Donation Type Selection */}
                 <div>
@@ -318,16 +427,16 @@ const DonasiPage = () => {
                       <button
                         key={tipe}
                         onClick={() => setDonationType(tipe)}
-                        className={`p-4 border-2 rounded-lg transition ${
+                        className={`px-4 py-2 border-2 rounded-full transition ${
                           donationType === tipe
                             ? "border-blue-600 bg-blue-50 text-blue-700"
                             : "border-gray-300 hover:border-blue-300"
                         }`}
                       >
-                        <div className="text-3xl mb-2">
-                          {tipe === "Uang" ? "💰" : tipe === "Barang" ? "📦" : "🛠️"}
+                        <div className="text-3xl">
+                          {tipe === "Uang" ? "" : tipe === "Barang" ? "" : ""}
                         </div>
-                        <div className="font-semibold">{tipe}</div>
+                        <div className="font-medium text-black">{tipe}</div>
                       </button>
                     ))}
                   </div>
@@ -346,7 +455,7 @@ const DonasiPage = () => {
                         const value = e.target.value.replace(/\D/g, "");
                         setFormData({ ...formData, jumlahDonasi: value });
                       }}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full bg-white px-4 py-2 text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Masukkan jumlah donasi"
                     />
                     {formData.jumlahDonasi && (
@@ -361,7 +470,7 @@ const DonasiPage = () => {
                     
                     <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                       <p className="text-sm text-blue-800">
-                        💳 <strong>Metode Pembayaran:</strong> QRIS (Midtrans)
+                        <strong>Metode Pembayaran:</strong> QRIS
                       </p>
                       <p className="text-xs text-blue-600 mt-1">
                         Anda akan mendapatkan kode QRIS di step konfirmasi
@@ -385,15 +494,15 @@ const DonasiPage = () => {
                         .map((item, idx) => (
                           <label
                             key={idx}
-                            className="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
+                            className="flex items-center gap-3 px-3 border border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50 transition"
                           >
                             <input
                               type="checkbox"
                               checked={formData.selectedBarang.includes(item)}
                               onChange={() => handleBarangToggle(item)}
-                              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                              className="custom-checkbox mt-3"
                             />
-                            <span className="ml-3 text-gray-700">{item}</span>
+                            <span className="text-gray-700 text-base">{item}</span>
                           </label>
                         ))}
                     </div>
@@ -415,15 +524,15 @@ const DonasiPage = () => {
                         .map((item, idx) => (
                           <label
                             key={idx}
-                            className="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
+                            className="flex items-center gap-3 px-3 border border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50 transition"
                           >
                             <input
                               type="checkbox"
                               checked={formData.selectedJasa.includes(item)}
                               onChange={() => handleJasaToggle(item)}
-                              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                              className="custom-checkbox mt-3"
                             />
-                            <span className="ml-3 text-gray-700">{item}</span>
+                            <span className="text-gray-700 text-base">{item}</span>
                           </label>
                         ))}
                     </div>
@@ -433,13 +542,13 @@ const DonasiPage = () => {
                 <div className="flex justify-between pt-4">
                   <button
                     onClick={() => setCurrentStep(1)}
-                    className="border border-gray-300 px-8 py-3 rounded-lg hover:bg-gray-50 transition font-medium"
+                    className="border border-gray-300 text-black px-6 py-2 rounded-full hover:bg-gray-50 transition font-medium"
                   >
                     Kembali
                   </button>
                   <button
                     onClick={handleNextStep}
-                    className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition font-medium"
+                    className="bg-blue-600 text-white px-6 rounded-full hover:bg-blue-700 transition font-medium"
                   >
                     Lanjutkan
                   </button>
@@ -453,20 +562,20 @@ const DonasiPage = () => {
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Konfirmasi Donasi</h2>
 
                 {/* Ringkasan Donasi */}
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6">
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-6">
                   <h3 className="font-bold text-gray-900 mb-4">Ringkasan Donasi</h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Nama:</span>
-                      <span className="font-medium">{formData.namaLengkap}</span>
+                      <span className="font-medium text-black">{formData.namaLengkap}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Email:</span>
-                      <span className="font-medium">{formData.email}</span>
+                      <span className="font-medium text-black">{formData.email}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Tipe Donasi:</span>
-                      <span className="font-medium">{donationType}</span>
+                      <span className="font-medium text-black">{donationType}</span>
                     </div>
                     {donationType === "Uang" && (
                       <div className="flex justify-between">
@@ -498,16 +607,60 @@ const DonasiPage = () => {
                 {/* Konfirmasi Uang */}
                 {donationType === "Uang" && (
                   <div>
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-4">
-                      <h4 className="font-bold text-blue-900 mb-3">📱 Scan QRIS untuk Pembayaran</h4>
-                      <div className="bg-white p-4 rounded-lg text-center">
-                        <div className="w-48 h-48 mx-auto bg-gray-200 rounded-lg flex items-center justify-center">
-                          <span className="text-gray-500 text-sm">QRIS Code</span>
-                          {/* In real app, integrate with Midtrans QRIS API */}
+                    {/* Timer Countdown */}
+                    <div className={`mb-4 p-4 rounded-lg border-2 ${
+                      timeRemaining <= 60 
+                        ? 'bg-red-50 border-red-500' 
+                        : 'bg-yellow-50 border-yellow-500'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span className="font-semibold text-gray-700">Sisa Waktu Pembayaran:</span>
                         </div>
-                        <p className="text-sm text-gray-600 mt-3">
-                          Scan QR code dengan aplikasi pembayaran Anda
+                        <span className={`text-2xl font-bold ${
+                          timeRemaining <= 60 ? 'text-red-600' : 'text-yellow-700'
+                        }`}>
+                          {formatTime(timeRemaining)}
+                        </span>
+                      </div>
+                      {timeRemaining <= 60 && (
+                        <p className="text-sm text-red-600 mt-2">
+                          ⚠️ Waktu hampir habis! Segera selesaikan pembayaran.
                         </p>
+                      )}
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
+                      <h4 className="font-bold text-blue-900 mb-4 text-lg">Scan QRIS untuk Pembayaran</h4>
+                      <div className="bg-white p-6 rounded-lg">
+                        <div className="flex flex-col items-center">
+                          {/* QR Code Image - Ganti path dengan gambar QR Anda */}
+                          <div className="w-64 h-64 bg-white border-4 border-blue-500 rounded-xl shadow-lg overflow-hidden flex items-center justify-center">
+                            <img 
+                              src="/images/qris2.png" 
+                              alt="QR Code Payment" 
+                              className="w-full h-full object-contain p-4"
+                              onError={(e) => {
+                                e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="%23e5e7eb"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="14" fill="%236b7280">QR Code</text></svg>';
+                              }}
+                            />
+                          </div>
+                          <p className="text-sm text-gray-600 mt-4 text-center max-w-xs">
+                            Scan QR code dengan aplikasi pembayaran Anda (GoPay, OVO, DANA, dll)
+                          </p>
+                          <div className="mt-4 px-5 py-2 bg-blue-50 rounded-full border border-blue-600">
+                            <p className="text-sm font-semibold text-blue-800">
+                              Total: {new Intl.NumberFormat("id-ID", {
+                                style: "currency",
+                                currency: "IDR",
+                                minimumFractionDigits: 0,
+                              }).format(formData.jumlahDonasi || 0)}
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -515,11 +668,14 @@ const DonasiPage = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Upload Bukti Pembayaran <span className="text-red-500">*</span>
                       </label>
+                      <p className="text-xs text-gray-500 mb-3">
+                        Upload screenshot bukti pembayaran setelah scan QR code
+                      </p>
                       <input
                         type="file"
                         accept="image/*"
                         onChange={handleFileUpload}
-                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        className="block w-full rounded-xl text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                       />
                       {formData.buktiPreview && (
                         <img
@@ -556,10 +712,10 @@ const DonasiPage = () => {
                         onChange={(e) =>
                           setFormData({ ...formData, nomorResi: e.target.value })
                         }
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full bg-white text-black px-4 py-2 mb-1 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Masukkan nomor resi setelah mengirim barang"
                       />
-                      <p className="mt-2 text-xs text-gray-500">
+                      <p className="mt-0 text-xs text-gray-500">
                         Silakan kirim barang terlebih dahulu, kemudian masukkan nomor resi di sini
                       </p>
                     </div>
@@ -569,7 +725,7 @@ const DonasiPage = () => {
                 {/* Konfirmasi Jasa */}
                 {donationType === "Jasa" && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-                    <h4 className="font-bold text-green-900 mb-3">✉️ Menunggu Konfirmasi</h4>
+                    <h4 className="font-bold text-green-900 mb-3">Menunggu Konfirmasi</h4>
                     <p className="text-sm text-green-800 mb-4">
                       Terima kasih telah menawarkan jasa Anda! Tim RuangBerbagi akan menghubungi
                       Anda melalui email <strong>{formData.email}</strong> dalam 1x24 jam untuk
@@ -582,7 +738,6 @@ const DonasiPage = () => {
                       <ul className="mt-2 space-y-1">
                         {formData.selectedJasa.map((item, idx) => (
                           <li key={idx} className="text-sm text-gray-600 flex items-center">
-                            <span className="text-green-600 mr-2">✓</span>
                             {item}
                           </li>
                         ))}
@@ -591,16 +746,18 @@ const DonasiPage = () => {
                   </div>
                 )}
 
-                <div className="flex justify-between pt-4">
-                  <button
-                    onClick={() => setCurrentStep(2)}
-                    className="border border-gray-300 px-8 py-3 rounded-lg hover:bg-gray-50 transition font-medium"
-                  >
-                    Kembali
-                  </button>
+                <div className="flex justify-between pt-4 gap-3">
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setCurrentStep(2)}
+                      className="border border-gray-300 px-6 py-2 text-black rounded-full hover:bg-gray-50 transition font-medium"
+                    >
+                      Kembali
+                    </button>
+                  </div>
                   <button
                     onClick={handleSubmit}
-                    className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition font-medium"
+                    className="bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700 transition font-medium"
                   >
                     Konfirmasi Donasi
                   </button>
@@ -609,7 +766,8 @@ const DonasiPage = () => {
             )}
           </div>
         </div>
-      </div>
+        </div> {/* Close relative z-10 div */}
+      </div> {/* Close relative wrapper div */}
 
       {/* Footer */}
       <footer className="bg-gray-100 py-6 text-center text-sm text-gray-600 border-t mt-12">

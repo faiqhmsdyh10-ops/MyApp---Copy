@@ -26,6 +26,69 @@ a:hover {
 @tailwind components;
 @tailwind utilities;
 
+/* Fix autocomplete background color */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+  -webkit-text-fill-color: #000 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* For dark backgrounds, use this instead */
+input.dark-input:-webkit-autofill,
+input.dark-input:-webkit-autofill:hover,
+input.dark-input:-webkit-autofill:focus,
+input.dark-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #f9fafb inset !important;
+  -webkit-text-fill-color: #111827 !important;
+}
+
+/* Custom Checkbox Styling */
+input[type="checkbox"].custom-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid #d1d5db; /* Gray border sebelum dicheck */
+  border-radius: 0.4rem; /* Rounded corners */
+  background-color: #f9fafb; /* Light gray background sebelum dicheck */
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+input[type="checkbox"].custom-checkbox:hover {
+  border-color: #9ca3af;
+  background-color: #f3f4f6;
+}
+
+input[type="checkbox"].custom-checkbox:checked {
+  background-color: #2563eb; /* Blue background saat dicheck */
+  border-color: #2563eb;
+}
+
+input[type="checkbox"].custom-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 3px;
+  width: 6px;
+  height: 11px;
+  border: solid white;
+  border-width: 0 2.3px 2.3px 0;
+  transform: rotate(45deg);
+  border-radius: 10%;
+}
+
+input[type="checkbox"].custom-checkbox:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
 body {
   font-family: "Poppins", sans-serif;
   margin: 0;
