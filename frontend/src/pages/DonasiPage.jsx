@@ -252,7 +252,7 @@ const DonasiPage = () => {
             <div className="max-w-6xl mb-12 text-center px-6">
               {aksi.image ? (
                 <>
-                  <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 drop-shadow-lg">
+                  <h1 className="text-5xl font-bold text-white mb-6" style={{ textShadow: "0 0px 10px rgba(0,0,0,0.5)" }}>
                     {aksi.judul || aksi.title || "Aksi Kebaikan"}
                   </h1>
                 </>
@@ -770,11 +770,6 @@ const DonasiPage = () => {
       </div> {/* Close relative wrapper div */}
 
       {/* Footer */}
-      <footer className="bg-gray-100 py-6 text-center text-sm text-gray-600 border-t mt-12">
-        © {new Date().getFullYear()}{" "}
-        <span className="font-semibold text-blue-600">RuangBerbagi</span> — Semua hak
-        dilindungi.
-      </footer>
     </div>
   );
 };

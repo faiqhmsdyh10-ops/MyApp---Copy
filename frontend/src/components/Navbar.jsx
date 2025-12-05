@@ -30,6 +30,23 @@ const Navbar = () => {
     }
   }, [location]); // Re-check when location changes
 
+  // Add storage event listener to update userData when it changes in localStorage
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const userDataStr = localStorage.getItem("userData");
+      if (userDataStr) {
+        setUserData(JSON.parse(userDataStr));
+      }
+    };
+
+    // Listen for custom event dispatched when userData is updated
+    window.addEventListener("userDataUpdated", handleStorageChange);
+    
+    return () => {
+      window.removeEventListener("userDataUpdated", handleStorageChange);
+    };
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("userToken");
@@ -50,7 +67,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className={`fixed top-0 z-50 w-full transition-colors ${isScrolled ? "bg-white shadow" : "bg-transparent"}`}>
+    <nav className={`fixed top-0 z-50 w-full transition-all duration-500 ease-in-out ${isScrolled ? "bg-white shadow-md" : "bg-transparent"}`}>
       <div className="flex items-center justify-between max-w-7xl px-0 mx-24 py-2">
         <div className="flex items-center">
           {/* Logo */}
@@ -90,11 +107,19 @@ const Navbar = () => {
                 onClick={() => setShowDropdown(!showDropdown)}
                 className={`flex items-center text-sm space-x-2 ${isScrolled ? "bg-blue-50 text-blue-700" : "bg-white/20 text-white"} px-4 py-2 rounded-full hover:bg-white hover:text-black transition`}
               >
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                  {userData.name?.charAt(0).toUpperCase() || userData.email?.charAt(0).toUpperCase() || "U"}
-                </div>
+                {userData.profilePhoto ? (
+                  <img
+                    src={userData.profilePhoto}
+                    alt="Profil"
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    {userData.name?.charAt(0).toUpperCase() || userData.email?.charAt(0).toUpperCase() || "U"}
+                  </div>
+                )}
                 <span className="font-medium">
-                  {userData.name || userData.email?.split('@')[0] || "User"}
+                  {userData.nickname || userData.email?.split('@')[0] || "User"}
                 </span>
                 <svg
                   className={`w-4 h-4 transition-transform ${showDropdown ? "rotate-180" : ""}`}

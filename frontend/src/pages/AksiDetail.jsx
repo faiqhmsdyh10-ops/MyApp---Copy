@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { getDonations } from "../api";
+import ShareModal from "../components/ShareModal";
 
 const AksiDetail = () => {
   const { id } = useParams();
@@ -11,6 +12,7 @@ const AksiDetail = () => {
   const [error, setError] = useState("");
   const [recentDonors, setRecentDonors] = useState([]);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const handleDonateClick = () => {
     // Check if user is logged in
@@ -33,6 +35,10 @@ const AksiDetail = () => {
 
     // Navigate to donation page with aksi id
     navigate(`/donasi/${id}`);
+  };
+
+  const handleShareClick = () => {
+    setShowShareModal(true);
   };
 
   useEffect(() => {
@@ -275,7 +281,10 @@ const AksiDetail = () => {
                       Ikut Berdonasi
                     </button>
                   )}
-                  <button className="w-full border border-blue-600 text-blue-600 py-2 rounded-full hover:bg-blue-50 transition font-medium">
+                  <button 
+                    onClick={handleShareClick}
+                    className="w-full border border-blue-600 text-blue-600 py-2 rounded-full hover:bg-blue-50 transition font-medium"
+                  >
                     Bagikan Aksi
                   </button>
                 </div>
@@ -330,10 +339,10 @@ const AksiDetail = () => {
         </div>
       )}
 
-      {/* Footer */}
-      <footer className="bg-gray-100 py-6 text-center text-sm text-gray-600 border-t mt-12">
-        © {new Date().getFullYear()} <span className="font-semibold text-blue-600">RuangBerbagi</span> — Semua hak dilindungi.
-      </footer>
+      {/* Share Modal */}
+      {showShareModal && (
+        <ShareModal onClose={() => setShowShareModal(false)} />
+      )}
     </div>
   );
 };

@@ -69,11 +69,6 @@ const TentangKami = () => {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-100 py-6 text-center text-sm text-gray-600 border-t mt-12">
-        © {new Date().getFullYear()} <span className="font-semibold text-blue-600">RuangBerbagi</span> — Semua hak dilindungi.
-      </footer>
     </div>
   );
 };

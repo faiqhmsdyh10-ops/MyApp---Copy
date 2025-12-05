@@ -8,6 +8,9 @@ import AksiDetail from "./pages/AksiDetail";
 import DonasiPage from "./pages/DonasiPage";
 import Relawan from "./pages/Relawan";
 import TentangKami from "./pages/TentangKami";
+import ProfilSaya from "./pages/ProfilSaya";
+import DonasiSaya from "./pages/DonasiSaya";
+import Layout from "./components/Layout";
 
 // Admin Pages
 import AdminLogin from "./pages/admin/AdminLogin";
@@ -27,42 +30,41 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen">
-      <Routes>
-        {/* Public Routes */}
+    <Routes>
+      {/* Public Routes - wrapped in Layout */}
+      <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/aksi-berjalan" element={<AksiBerjalan />} />
         <Route path="/aksi/:id" element={<AksiDetail />} />
         <Route path="/donasi/:id" element={<DonasiPage />} />
         <Route path="/relawan" element={<Relawan />} />
         <Route path="/tentang-kami" element={<TentangKami />} />
-
-        {/* Auth Routes */}
+        <Route path="/profil" element={<ProfilSaya />} />
+        <Route path="/donasi-saya" element={<DonasiSaya />} />
         <Route
           path="/login"
           element={<LoginForm onLogin={handleLogin} onSwitchToRegister={() => navigate('/register')} />}
         />
-
         <Route
           path="/register"
           element={<RegisterForm onSwitchToLogin={() => navigate('/login')} onRegisterSuccess={() => navigate("/")} />}
         />
+      </Route>
 
-        {/* Admin Routes */}
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Navigate to="/admin/dashboard" replace />} />
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="kelola-aksi" element={<KelolaAksi />} />
-          <Route path="tambah-aksi" element={<TambahAksi />} />
-          <Route path="kelola-relawan" element={<KelolaRelawan />} />
-          <Route path="laporan" element={<LaporanAksi />} />
-        </Route>
+      {/* Admin Routes - NOT wrapped in Layout */}
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="kelola-aksi" element={<KelolaAksi />} />
+        <Route path="tambah-aksi" element={<TambahAksi />} />
+        <Route path="kelola-relawan" element={<KelolaRelawan />} />
+        <Route path="laporan" element={<LaporanAksi />} />
+      </Route>
 
-        {/* Catch All */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </div>
+      {/* Catch All */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 };
 

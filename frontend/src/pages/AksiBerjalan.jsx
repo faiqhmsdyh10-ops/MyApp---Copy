@@ -10,6 +10,10 @@ const AksiBerjalan = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedKategori, setSelectedKategori] = useState("Semua");
+  const [sortBy, setSortBy] = useState("Terbaru");
+  const [showKategoriDropdown, setShowKategoriDropdown] = useState(false);
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
   
 
   useEffect(() => {
@@ -47,10 +51,11 @@ const AksiBerjalan = () => {
     fetchDonations();
   }, []);
 
-  // Filter donations based on search and category
+  // Filter and sort donations based on search, kategori, and sortBy
   useEffect(() => {
     let result = donations;
 
+    // Search filter
     if (searchQuery) {
       result = result.filter((d) =>
         (d.title || d.judul || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -58,8 +63,50 @@ const AksiBerjalan = () => {
       );
     }
 
+    // Kategori filter
+    if (selectedKategori !== "Semua") {
+      result = result.filter((d) => {
+        const tipe = d.kategori || d.tipe || d.category || "Umum";
+        const arr = Array.isArray(tipe)
+          ? tipe
+          : typeof tipe === "string"
+            ? tipe.split(",").map((k) => k.trim())
+            : [String(tipe)];
+        return arr.includes(selectedKategori);
+      });
+    }
+
+    // Sorting
+    if (sortBy === "Terbaru") {
+      result = result.slice().sort((a, b) => {
+        const dateA = new Date(a.createdAt || a.lastUpdated || 0);
+        const dateB = new Date(b.createdAt || b.lastUpdated || 0);
+        return dateB - dateA;
+      });
+    } else if (sortBy === "Progress Terendah") {
+      result = result.slice().sort((a, b) => {
+        const ta = Number(a.donasiTerkumpul ?? a.terkumpul ?? 0);
+        const taTarget = Number(a.targetDonasi ?? a.target ?? 1);
+        const tb = Number(b.donasiTerkumpul ?? b.terkumpul ?? 0);
+        const tbTarget = Number(b.targetDonasi ?? b.target ?? 1);
+        const pa = Math.min((ta / Math.max(taTarget, 1)) * 100, 100);
+        const pb = Math.min((tb / Math.max(tbTarget, 1)) * 100, 100);
+        return pa - pb;
+      });
+    } else if (sortBy === "Progress Tertinggi") {
+      result = result.slice().sort((a, b) => {
+        const ta = Number(a.donasiTerkumpul ?? a.terkumpul ?? 0);
+        const taTarget = Number(a.targetDonasi ?? a.target ?? 1);
+        const tb = Number(b.donasiTerkumpul ?? b.terkumpul ?? 0);
+        const tbTarget = Number(b.targetDonasi ?? b.target ?? 1);
+        const pa = Math.min((ta / Math.max(taTarget, 1)) * 100, 100);
+        const pb = Math.min((tb / Math.max(tbTarget, 1)) * 100, 100);
+        return pb - pa;
+      });
+    }
+
     setFilteredDonations(result);
-  }, [searchQuery, donations]);
+  }, [searchQuery, donations, selectedKategori, sortBy]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -85,22 +132,117 @@ const AksiBerjalan = () => {
       </section>
 
       {/* Search & Filter Section */}
-      <section className="py-6 bg-white border-b">
+      <section className="py-8 bg-white border-b">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row items-center gap-4">
-            <div className="flex items-center gap-3">
-              <button className="px-3 py-2 text-black bg-white border border-gray-200 rounded-full text-sm shadow-sm">Kategori ▾</button>
-              <button className="px-3 py-2 text-black bg-white border border-gray-200 rounded-full text-sm shadow-sm">Filter ▾</button>
+          <div className="flex flex-col md:flex-row items-start gap-4">
+            {/* Kategori Filter - Custom Dropdown */}
+            <div className="relative w-full md:w-48">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
+              <button
+                onClick={() => setShowKategoriDropdown(!showKategoriDropdown)}
+                className="flex items-center justify-between w-full gap-2 px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-xl text-sm hover:border-gray-400 transition"
+              >
+                <span className="text-gray-900">{selectedKategori}</span>
+                <svg
+                  className={`w-4 h-4 transition-transform ${showKategoriDropdown ? "rotate-180" : ""}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Dropdown Menu */}
+              {showKategoriDropdown && (
+                <div className="absolute left-0 mt-2 w-full bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                  {["Semua", "Uang", "Barang", "Jasa"].map((kat) => (
+                    <button
+                      key={kat}
+                      onClick={() => {
+                        setSelectedKategori(kat);
+                        setShowKategoriDropdown(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-sm transition ${
+                        selectedKategori === kat
+                          ? "bg-blue-50 text-blue-700 font-medium"
+                          : "text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      {kat}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder="Cari aksi yang sedang berjalan"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-5 py-3 bg-gray-50 border border-transparent rounded-full focus:outline-none focus:ring-2 focus:ring-blue-200"
-              />
+            {/* Sorting Filter - Custom Dropdown */}
+            <div className="relative w-full md:w-56">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Urutkan</label>
+              <button
+                onClick={() => setShowSortDropdown(!showSortDropdown)}
+                className="flex items-center justify-between w-full gap-2 px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-xl text-sm hover:border-gray-400 transition"
+              >
+                <span className="text-gray-900">{sortBy}</span>
+                <svg
+                  className={`w-4 h-4 transition-transform ${showSortDropdown ? "rotate-180" : ""}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Dropdown Menu */}
+              {showSortDropdown && (
+                <div className="absolute left-0 mt-2 w-full bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                  {["Terbaru", "Progress Terendah", "Progress Tertinggi"].map((sort) => (
+                    <button
+                      key={sort}
+                      onClick={() => {
+                        setSortBy(sort);
+                        setShowSortDropdown(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-sm transition ${
+                        sortBy === sort
+                          ? "bg-blue-50 text-blue-700 font-medium"
+                          : "text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      {sort}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex-1 w-full">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Cari Aksi</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Cari aksi yang sedang berjalan"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      // Trigger search on Enter key
+                      e.preventDefault();
+                    }
+                  }}
+                  className="flex-1 px-4 py-3 text-gray-900 placeholder-gray-500 bg-white border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                />
+                <button
+                  onClick={() => {
+                    // Search is already handled by useEffect watching searchQuery
+                    // This button provides visual feedback
+                  }}
+                  className="px-6 py-3 mb-3 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  Cari
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -226,131 +368,6 @@ const AksiBerjalan = () => {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-700 text-gray-300">
-        {/* Newsletter Section */}
-        <div className="border-b border-gray-600 py-12">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-              <div className="flex items-center gap-3">
-                <div className="text-3xl">📧</div>
-                <div>
-                  <h3 className="font-bold text-white text-lg">Stay up to date</h3>
-                </div>
-              </div>
-              <div className="flex gap-3 w-full md:w-auto">
-                <input
-                  type="email"
-                  placeholder="Enter your email to get the latest news..."
-                  className="flex-1 md:w-80 px-4 py-2 rounded-lg bg-gray-600 border border-gray-500 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-medium">
-                  Subscribe
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Links Section */}
-        <div className="py-12">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
-              {/* Column One */}
-              <div>
-                <h4 className="font-bold text-white mb-4">Column One</h4>
-                <ul className="space-y-2">
-                  <li><a href="#" className="hover:text-white transition">Twenty One</a></li>
-                  <li><a href="#" className="hover:text-white transition">Thirty Two</a></li>
-                  <li><a href="#" className="hover:text-white transition">Fourty Three</a></li>
-                  <li><a href="#" className="hover:text-white transition">Fifty Four</a></li>
-                </ul>
-              </div>
-
-              {/* Column Two */}
-              <div>
-                <h4 className="font-bold text-white mb-4">Column Two</h4>
-                <ul className="space-y-2">
-                  <li><a href="#" className="hover:text-white transition">Sixty Five</a></li>
-                  <li><a href="#" className="hover:text-white transition">Seventy Six</a></li>
-                  <li><a href="#" className="hover:text-white transition">Eighty Seven</a></li>
-                  <li><a href="#" className="hover:text-white transition">Ninety Eight</a></li>
-                </ul>
-              </div>
-
-              {/* Column Three */}
-              <div>
-                <h4 className="font-bold text-white mb-4">Column Three</h4>
-                <ul className="space-y-2">
-                  <li><a href="#" className="hover:text-white transition">One Two</a></li>
-                  <li><a href="#" className="hover:text-white transition">Three Four</a></li>
-                  <li><a href="#" className="hover:text-white transition">Five Six</a></li>
-                  <li><a href="#" className="hover:text-white transition">Seven Eight</a></li>
-                </ul>
-              </div>
-
-              {/* Column Four - App Store & Social */}
-              <div>
-                <h4 className="font-bold text-white mb-4">Column Four</h4>
-                <div className="space-y-3 mb-6">
-                  <a href="#" className="block">
-                    <div className="bg-gray-600 px-4 py-2 rounded-lg hover:bg-gray-500 transition flex items-center gap-2">
-                      <span className="text-xl">🍎</span>
-                      <span className="text-sm">App Store</span>
-                    </div>
-                  </a>
-                  <a href="#" className="block">
-                    <div className="bg-gray-600 px-4 py-2 rounded-lg hover:bg-gray-500 transition flex items-center gap-2">
-                      <span className="text-xl">📱</span>
-                      <span className="text-sm">Google Play</span>
-                    </div>
-                  </a>
-                </div>
-                
-                {/* Social Media */}
-                <div>
-                  <h5 className="font-semibold text-white text-sm mb-3">Join Us</h5>
-                  <div className="flex gap-3">
-                    <a href="#" className="w-8 h-8 bg-gray-600 rounded flex items-center justify-center hover:bg-gray-500 transition">
-                      <span className="text-sm">▶️</span>
-                    </a>
-                    <a href="#" className="w-8 h-8 bg-gray-600 rounded flex items-center justify-center hover:bg-gray-500 transition">
-                      <span className="text-sm">f</span>
-                    </a>
-                    <a href="#" className="w-8 h-8 bg-gray-600 rounded flex items-center justify-center hover:bg-gray-500 transition">
-                      <span className="text-sm">🐦</span>
-                    </a>
-                    <a href="#" className="w-8 h-8 bg-gray-600 rounded flex items-center justify-center hover:bg-gray-500 transition">
-                      <span className="text-sm">📷</span>
-                    </a>
-                    <a href="#" className="w-8 h-8 bg-gray-600 rounded flex items-center justify-center hover:bg-gray-500 transition">
-                      <span className="text-sm">in</span>
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Copyright */}
-        <div className="border-t border-gray-600 py-6">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">🎨</span>
-                <span>CompanyName © 2024. All rights reserved.</span>
-              </div>
-              <div className="flex gap-6">
-                <a href="#" className="hover:text-white transition">Eleven</a>
-                <a href="#" className="hover:text-white transition">Twelve</a>
-                <a href="#" className="hover:text-white transition">Thirteen</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };
