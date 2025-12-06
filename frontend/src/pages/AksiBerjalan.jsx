@@ -109,7 +109,7 @@ const AksiBerjalan = () => {
   }, [searchQuery, donations, selectedKategori, sortBy]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 font-inter">
       <Navbar />
 
       {/* Hero Section */}

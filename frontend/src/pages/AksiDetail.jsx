@@ -103,7 +103,7 @@ const AksiDetail = () => {
   if (!aksi) return <div className="pt-20 text-center text-gray-500">Aksi tidak ditemukan</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 font-inter">
       <Navbar />
 
       <div className="pt-0">

@@ -227,7 +227,7 @@ const DonasiPage = () => {
   
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white font-inter">
       <Navbar />
 
       {/* Hero Background yang memanjang */}

@@ -1,5 +1,5 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Lora', serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -90,7 +90,7 @@ input[type="checkbox"].custom-checkbox:focus {
 }
 
 body {
-  font-family: "Poppins", sans-serif;
+  font-family: "Lora", sans-serif;
   margin: 0;
 }
 
@@ -155,4 +155,31 @@ select {
   color: #1976d2;
   cursor: pointer;
   font-weight: bold;
+}
+
+/* Hide scrollbar while keeping scroll functionality */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+/* Admin pages - reset to default font */
+.admin-layout {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+/* Font utility classes */
+.font-poppins {
+  font-family: 'Poppins', sans-serif;
+}
+
+.font-inter {
+  font-family: 'Inter', sans-serif;
+}
+
+.font-lora {
+  font-family: 'Lora', serif;
 }

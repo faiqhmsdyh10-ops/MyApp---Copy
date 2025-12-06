@@ -64,7 +64,7 @@ const Home = () => {
         <div className="max-w-6xl mx-auto text-left ml-24">
           <h1 className="text-6xl font-bold text-white">
             Bikin Dampak Nyata, <br />
-            Mulai dari Hal <span className="border-r-2 text-yellow-50 rounded-l-md px-1 border-yellow-500 bg-yellow-500/40">Sederhana</span>
+            Mulai dari Hal <span className="pl-2 pb-1 border-r-2 text-yellow-50 rounded-l-md px-1 border-yellow-500 bg-yellow-500/40">Sederhana</span>
           </h1>
           <p className="mt-4 text-gray-300 max-w-xl">
             Bareng RuangBerbagi, kamu bisa bantu sesama lewat donasi uang, barang,

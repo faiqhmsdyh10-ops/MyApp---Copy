@@ -98,7 +98,7 @@ const DonasiSaya = () => {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white font-inter">
         {/* Background Image Section */}
         <div 
           className="w-full relative"

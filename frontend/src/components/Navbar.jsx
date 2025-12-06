@@ -73,7 +73,7 @@ const Navbar = () => {
           {/* Logo */}
           <button
             onClick={() => navigate("/")}
-            className={`flex items-center bg-none space-x-2 text-sm font-medium ${isScrolled ? "text-gray-900" : "text-white"}`}
+            className={`flex items-center bg-none space-x-2 font-inter text-sm font-medium ${isScrolled ? "text-gray-900" : "text-white"}`}
           >
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-white font-bold">
               RB
@@ -87,7 +87,7 @@ const Navbar = () => {
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`font-regular text-sm whitespace-nowrap transition-colors px-2 py-0 rounded ${
+                className={`font-regular font-inter text-sm whitespace-nowrap transition-colors px-2 py-0 rounded ${
                   isActive(item.path)
                     ? isScrolled ? "text-blue-600" : "text-white"
                     : isScrolled ? "text-gray-700 hover:text-blue-600" : "text-white hover:text-blue-200"
@@ -100,7 +100,7 @@ const Navbar = () => {
         </div>
 
         {/* Right side (login button or user menu) */}
-        <div className="hidden md:flex items-center">
+        <div className="hidden md:flex items-center font-inter">
           {isLoggedIn && userData ? (
             <div className="relative">
               <button
