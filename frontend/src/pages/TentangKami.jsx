@@ -44,14 +44,38 @@ const TentangKami = () => {
     }
   ];
 
+  const faqs = [
+    {
+      question: "Apa visi dan misi RuangBerbagi?",
+      answer: "Visi kami adalah membangun ekosistem sosial yang transparan dan berkelanjutan. Misi kami adalah menghubungkan donatur, relawan, dan penerima manfaat dalam satu platform yang aman dan mudah diakses."
+    },
+    {
+      question: "Bagaimana cara RuangBerbagi memastikan transparansi?",
+      answer: "Setiap donasi dan aksi sosial dapat dilacak secara real-time melalui dashboard kami. Kami juga rutin menerbitkan laporan dampak yang menunjukkan bagaimana dana digunakan untuk membantu masyarakat."
+    },
+    {
+      question: "Apakah donasi saya aman di RuangBerbagi?",
+      answer: "Ya. Kami menggunakan sistem pembayaran digital yang terenkripsi dan bekerja sama dengan lembaga keuangan terpercaya. Setiap transaksi tercatat dengan aman dan transparan."
+    },
+    {
+      question: "Siapa yang bisa bergabung dengan RuangBerbagi?",
+      answer: "Siapa saja bisa bergabung! Baik sebagai donatur, relawan, atau penerima manfaat. Kami terbuka untuk individu, organisasi, dan perusahaan yang ingin berkontribusi pada perubahan sosial positif."
+    },
+    {
+      question: "Bagaimana cara mengukur dampak dari program RuangBerbagi?",
+      answer: "Kami menggunakan metrik yang jelas untuk mengukur dampak setiap program, termasuk jumlah penerima manfaat, durasi dampak, dan feedback dari komunitas. Hasil ini dilaporkan secara berkala kepada semua stakeholder."
+    }
+  ];
+
   return (
     <>
       <Navbar />
       <div className="min-h-screen bg-white font-inter">
         {/* Hero Section */}
-        <section className="pt-24 pb-16 px-4 relative bg-cover bg-center min-h-[100vh]" style={{ backgroundImage: "url('/images/aksi.jpg')" }}>
+        <section className="pt-24 pb-16 px-4 relative bg-cover bg-center min-h-[100vh]" style={{ backgroundImage: "url('/images/tentang.jpg')" }}>
           {/* Dark Overlay */}
-          <div className="absolute inset-0 bg-black/60"></div>
+          <div className="absolute inset-0 bg-black/70"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/10 to-none pointer-events-none"></div>
           
           <div className="max-w-6xl mx-auto relative z-10">
             <div className="items-center text-center py-20">
@@ -70,10 +94,7 @@ const TentangKami = () => {
                 </p>
                 <div className="flex gap-4 justify-center">
                   <button className="bg-blue-600 text-white px-8 py-3 rounded-full hover:bg-blue-700 transition font-medium shadow-lg">
-                    Bergabung Sekarang
-                  </button>
-                  <button className="border-2 border-gray-300 text-white px-8 py-3 rounded-full hover:bg-white hover:text-gray-900 transition font-medium">
-                    Pelajari Lebih Lanjut
+                    Baca Selengkapnya
                   </button>
                 </div>
               </div>
@@ -243,6 +264,71 @@ const TentangKami = () => {
             </div>
           </div>
         </section>
+
+      {/* FAQ Section */}
+      <section className="py-16 px-4 bg-white">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Pertanyaan Yang Sering Ditanyakan
+            </h2>
+            <p className="text-gray-600 text-lg">
+              Temukan jawaban atas pertanyaan umum tentang RuangBerbagi dan bagaimana kami bekerja.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {faqs.map((faq, index) => (
+              <details key={index} className="bg-white border border-gray-200 rounded-lg p-6 hover:border-blue-300 transition group cursor-pointer">
+                <summary className="font-semibold text-gray-900 flex justify-between items-center select-none">
+                  {faq.question}
+                  <svg
+                    className="w-5 h-5 text-blue-600 group-open:rotate-180 transition-transform duration-300 flex-shrink-0 ml-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <p className="text-gray-600 mt-4 leading-relaxed">{faq.answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gray-100">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            {/* Left - Text & CTA */}
+            <div>
+              <h2 className="text-4xl font-bold text-gray-900 mb-6">Yuk, Jadi Bagian dari Perubahan!</h2>
+              <p className="text-gray-700 mb-8 leading-relaxed">
+                Mulai langkah kecilmu hari ini. Karena kebaikan gak harus nungguin kaya, cukup niat dan tik aja.
+              </p>
+              <div className="flex gap-4">
+                <button className="bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition font-medium">
+                  Mulai Donasi Sekarang
+                </button>
+                <button className="border-2 border-blue-600 text-blue-600 px-6 py-3 rounded-full hover:bg-blue-50 transition font-medium">
+                  Gabung Jadi Relawan
+                </button>
+              </div>
+            </div>
+
+            {/* Right - Charity Image */}
+            <div className="flex justify-center">
+              <div 
+                className="w-full h-96 bg-gray-300 rounded-3xl bg-cover bg-center"
+                style={{ backgroundImage: "url('/images/charity.jpg')" }}
+              >
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
       </div>
     </>
   );
