@@ -272,14 +272,11 @@ const TentangKami = () => {
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
               Pertanyaan Yang Sering Ditanyakan
             </h2>
-            <p className="text-gray-600 text-lg">
-              Temukan jawaban atas pertanyaan umum tentang RuangBerbagi dan bagaimana kami bekerja.
-            </p>
           </div>
 
           <div className="space-y-4">
             {faqs.map((faq, index) => (
-              <details key={index} className="bg-white border border-gray-200 rounded-lg p-6 hover:border-blue-300 transition group cursor-pointer">
+              <details key={index} className="bg-white border border-gray-200 rounded-xl px-6 py-4 hover:border-blue-300 transition group cursor-pointer">
                 <summary className="font-semibold text-gray-900 flex justify-between items-center select-none">
                   {faq.question}
                   <svg

@@ -20,6 +20,7 @@ import KelolaAksi from "./pages/admin/KelolaAksi";
 import TambahAksi from "./pages/admin/TambahAksi";
 import KelolaRelawan from "./pages/admin/KelolaRelawan";
 import LaporanAksi from "./pages/admin/LaporanAksi";
+import KelolaBarang from "./pages/admin/KelolaBarang";
 
 const App = () => {
   const navigate = useNavigate();
@@ -59,6 +60,7 @@ const App = () => {
         <Route path="kelola-aksi" element={<KelolaAksi />} />
         <Route path="tambah-aksi" element={<TambahAksi />} />
         <Route path="kelola-relawan" element={<KelolaRelawan />} />
+        <Route path="kelola-barang" element={<KelolaBarang />} />
         <Route path="laporan" element={<LaporanAksi />} />
       </Route>
 

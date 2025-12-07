@@ -189,6 +189,44 @@ const DonasiPage = () => {
     donations.push(donation);
     localStorage.setItem("donations", JSON.stringify(donations));
 
+    // Handle donasi Barang - simpan ke donasiBarangList
+    if (donationType === "Barang") {
+      const barangData = {
+        id: Date.now(),
+        jenisBarang: formData.selectedBarang.join(", "),
+        deskripsiBarang: formData.selectedBarang.join(", "),
+        judulAksi: aksi.judul,
+        namaPendonasi: formData.namaLengkap,
+        nomorHpPendonasi: formData.noHp,
+        nomorResi: formData.nomorResi,
+        status: "belum diterima",
+        tanggalDikirim: new Date().toLocaleDateString("id-ID"),
+        tanggalDiterima: null,
+      };
+      const barangList = JSON.parse(localStorage.getItem("donasiBarangList") || "[]");
+      barangList.push(barangData);
+      localStorage.setItem("donasiBarangList", JSON.stringify(barangList));
+      console.log("✅ Donasi barang berhasil dicatat:", barangData);
+    }
+
+    // Handle donasi Jasa - simpan ke pengajuanJasaList
+    if (donationType === "Jasa") {
+      const jasaData = {
+        id: Date.now(),
+        nama: formData.namaLengkap,
+        email: formData.email,
+        noHp: formData.noHp,
+        deskripsi: formData.selectedJasa.join(", "),
+        ketersediaan: "Sesuai dengan kebutuhan aksi",
+        status: "pending",
+        tanggalPengajuan: new Date().toLocaleDateString("id-ID"),
+      };
+      const jасаList = JSON.parse(localStorage.getItem("pengajuanJasaList") || "[]");
+      jасаList.push(jasaData);
+      localStorage.setItem("pengajuanJasaList", JSON.stringify(jасаList));
+      console.log("✅ Pengajuan jasa berhasil dicatat:", jasaData);
+    }
+
     // Update progress donasi uang pada aksi terkait
     if (donationType === "Uang") {
       const aksiList = JSON.parse(localStorage.getItem("aksiList") || "[]");

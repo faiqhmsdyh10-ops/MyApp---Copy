@@ -15,6 +15,7 @@ const AdminLayout = () => {
     { label: "Kelola Aksi", path: "/admin/kelola-aksi", icon: "📋" },
     { label: "Tambah Aksi", path: "/admin/tambah-aksi", icon: "➕" },
     { label: "Kelola Relawan", path: "/admin/kelola-relawan", icon: "👥" },
+    { label: "Kelola Barang", path: "/admin/kelola-barang", icon: "📦" },
     { label: "Laporan", path: "/admin/laporan", icon: "📈" },
   ];
 
