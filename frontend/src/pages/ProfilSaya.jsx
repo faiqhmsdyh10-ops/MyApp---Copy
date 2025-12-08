@@ -72,7 +72,15 @@ const ProfilSaya = () => {
       ...formData,
       profilePhoto: profilePhoto || formData.profilePhoto,
     };
+    
+    // Save to userData (for current session)
     localStorage.setItem("userData", JSON.stringify(updatedData));
+    
+    // Save to user-specific profile key (persistent across login sessions)
+    const userEmail = updatedData.email || userData.email;
+    const profileKey = `userProfile_${userEmail}`;
+    localStorage.setItem(profileKey, JSON.stringify(updatedData));
+    
     setUserData(updatedData);
     setFormData(updatedData);
     setIsEditing(false);

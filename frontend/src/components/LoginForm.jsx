@@ -48,9 +48,26 @@ const LoginForm = ({ onLogin, onSwitchToRegister }) => {
       // Save login state to localStorage
       localStorage.setItem("isLoggedIn", "true");
       localStorage.setItem("userToken", response.token || "dummy-token");
-      localStorage.setItem("userData", JSON.stringify(response.user || { email, name: email.split('@')[0] }));
       
-      onLogin(response.user);
+      const userEmail = response.user?.email || email;
+      const profileKey = `userProfile_${userEmail}`;
+      
+      // Check if user has existing profile data
+      const existingProfile = localStorage.getItem(profileKey);
+      let userData;
+      
+      if (existingProfile) {
+        // Merge existing profile with new login data
+        userData = { ...JSON.parse(existingProfile), email: userEmail };
+      } else {
+        // Create new user profile
+        userData = response.user || { email, name: email.split('@')[0] };
+      }
+      
+      localStorage.setItem("userData", JSON.stringify(userData));
+      localStorage.setItem(profileKey, JSON.stringify(userData));
+      
+      onLogin(userData);
     } catch (err) {
       setError(err.message || "Email atau password salah");
     } finally {
@@ -59,7 +76,7 @@ const LoginForm = ({ onLogin, onSwitchToRegister }) => {
   };
 
   return (
-    <div className="min-h-screen bg-white lg:flex">
+    <div className="min-h-screen bg-white lg:flex font-inter">
       {/* Left visual panel */}
       <div className="relative hidden lg:flex lg:w-1/2 xl:w-3/5 overflow-hidden">
         <img

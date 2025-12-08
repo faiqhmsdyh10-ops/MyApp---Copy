@@ -69,3 +69,54 @@ export const getDashboardSummary = async () => {
     throw error
   }
 }
+
+// Transparansi Donasi API
+export const getTransparansiByAksi = async (aksiId) => {
+  try {
+    const res = await fetch(`${API_URL}/transparansi/aksi/${aksiId}`)
+    if (!res.ok) throw new Error('Gagal memuat transparansi')
+    return res.json()
+  } catch (error) {
+    throw error
+  }
+}
+
+export const createTransparansi = async (data) => {
+  try {
+    const res = await fetch(`${API_URL}/transparansi`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    if (!res.ok) throw new Error('Gagal membuat transparansi')
+    return res.json()
+  } catch (error) {
+    throw error
+  }
+}
+
+export const updateTransparansi = async (id, data) => {
+  try {
+    const res = await fetch(`${API_URL}/transparansi/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    if (!res.ok) throw new Error('Gagal update transparansi')
+    return res.json()
+  } catch (error) {
+    throw error
+  }
+}
+
+export const deleteTransparansi = async (id) => {
+  try {
+    const res = await fetch(`${API_URL}/transparansi/${id}`, {
+      method: 'DELETE'
+    })
+    if (!res.ok) throw new Error('Gagal hapus transparansi')
+    return res.json()
+  } catch (error) {
+    throw error
+  }
+}

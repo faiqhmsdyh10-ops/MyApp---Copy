@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { getDonations } from "../api";
 import ShareModal from "../components/ShareModal";
+import TransparansiDonasi from "../components/TransparansiDonasi";
 
 const AksiDetail = () => {
   const { id } = useParams();
@@ -13,6 +14,7 @@ const AksiDetail = () => {
   const [recentDonors, setRecentDonors] = useState([]);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showTransparansi, setShowTransparansi] = useState(false);
 
   const handleDonateClick = () => {
     // Check if user is logged in
@@ -287,6 +289,12 @@ const AksiDetail = () => {
                   >
                     Bagikan Aksi
                   </button>
+                  <button 
+                    onClick={() => setShowTransparansi(true)}
+                    className="w-full bg-purple-600 text-white py-2 rounded-full hover:bg-purple-700 transition font-medium"
+                  >
+                    📊 Transparansi Donasi
+                  </button>
                 </div>
 
                 {/* Recent Donors */}
@@ -342,6 +350,15 @@ const AksiDetail = () => {
       {/* Share Modal */}
       {showShareModal && (
         <ShareModal onClose={() => setShowShareModal(false)} />
+      )}
+
+      {/* Transparansi Donasi Modal */}
+      {showTransparansi && aksi && (
+        <TransparansiDonasi 
+          isOpen={showTransparansi} 
+          onClose={() => setShowTransparansi(false)} 
+          aksiId={aksi.id} 
+        />
       )}
     </div>
   );
