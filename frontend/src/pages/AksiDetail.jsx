@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import { getDonations } from "../api";
 import ShareModal from "../components/ShareModal";
 import TransparansiDonasi from "../components/TransparansiDonasi";
+import { Share2 } from "lucide-react";
 
 const AksiDetail = () => {
   const { id } = useParams();
@@ -283,18 +284,20 @@ const AksiDetail = () => {
                       Ikut Berdonasi
                     </button>
                   )}
-                  <button 
-                    onClick={handleShareClick}
-                    className="w-full border border-blue-600 text-blue-600 py-2 rounded-full hover:bg-blue-50 transition font-medium"
-                  >
-                    Bagikan Aksi
-                  </button>
-                  <button 
-                    onClick={() => setShowTransparansi(true)}
-                    className="w-full bg-purple-600 text-white py-2 rounded-full hover:bg-purple-700 transition font-medium"
-                  >
-                    📊 Transparansi Donasi
-                  </button>
+                  <div className="grid grid-cols-8 gap-3">
+                    <button 
+                      onClick={() => setShowTransparansi(true)}
+                      className="w-full bg-white text-black py-2 rounded-full hover:bg-gray-50 border border-black transition font-medium col-span-7"
+                    >
+                      Progress Donasi
+                    </button>
+                    <button 
+                      onClick={handleShareClick}
+                      className="w-full flex text-blue-600 py-2 rounded-full hover:text-blue-700 transition font-medium"
+                    >
+                      <Share2 />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Recent Donors */}
