@@ -76,9 +76,9 @@ const LoginForm = ({ onLogin, onSwitchToRegister }) => {
   };
 
   return (
-    <div className="min-h-screen bg-white lg:flex font-inter">
+    <div className="min-h-screen bg-gray-50 lg:flex font-inter">
       {/* Left visual panel */}
-      <div className="relative hidden lg:flex lg:w-1/2 xl:w-3/5 overflow-hidden">
+      <div className="relative hidden lg:flex lg:w-1/2 xl:w-3/5 overflow-hidden rounded-r-full">
         <img
           src={slides[activeSlide].image}
           alt={slides[activeSlide].title}
@@ -87,8 +87,8 @@ const LoginForm = ({ onLogin, onSwitchToRegister }) => {
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-slate-900/50 to-transparent" />
         <div className="relative z-10 flex flex-col justify-between p-12 xl:p-16 text-white w-full">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1 text-sm font-medium backdrop-blur-md">
-              <span className="text-base">✨</span> RuangBerbagi
+            <div className="inline-flex items-center gap-2 rounded-full bg-none border-2 border-blue-600 px-4 py-1.5 text-sm font-medium backdrop-blur-2xl">
+              <span className="text-base"></span> RuangBerbagi
             </div>
             <h2 className="mt-6 text-4xl font-bold leading-tight drop-shadow-sm">
               {slides[activeSlide].title}
@@ -121,12 +121,12 @@ const LoginForm = ({ onLogin, onSwitchToRegister }) => {
       </div>
 
       {/* Right form panel */}
-      <div className="flex w-full lg:w-1/2 xl:w-2/5 items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-12 px-4 sm:px-8 lg:px-12">
+      <div className="flex w-full lg:w-1/2 xl:w-2/5 items-center justify-center bg-gray-50 py-12 px-4 sm:px-8 lg:px-12">
         <div className="max-w-md w-full space-y-8">
           {/* Header */}
           <div className="text-center">
             <div className="flex justify-center mb-4">
-              <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 text-white text-2xl font-bold shadow-lg">
+              <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 text-white text-2xl font-bold">
                 RB
               </div>
             </div>
@@ -135,7 +135,7 @@ const LoginForm = ({ onLogin, onSwitchToRegister }) => {
           </div>
 
           {/* Form Card */}
-          <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+          <div className="bg-white rounded-2xl p-8 border">
             <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
                 <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg">
@@ -154,7 +154,7 @@ const LoginForm = ({ onLogin, onSwitchToRegister }) => {
 
               {/* Email Input */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-black mb-2">
                   Email
                 </label>
                 <div className="relative">
@@ -180,7 +180,7 @@ const LoginForm = ({ onLogin, onSwitchToRegister }) => {
                       setError("");
                     }}
                     disabled={loading}
-                    className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-gray-50 disabled:cursor-not-allowed"
+                    className="appearance-none block w-full pl-10 pr-3 py-3 border bg-white text-black rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-gray-50 disabled:cursor-not-allowed"
                     placeholder="nama@email.com"
                   />
                 </div>
@@ -211,7 +211,7 @@ const LoginForm = ({ onLogin, onSwitchToRegister }) => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={loading}
-                    className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-gray-50 disabled:cursor-not-allowed"
+                    className="appearance-none bg-white text-black block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-gray-50 disabled:cursor-not-allowed"
                     placeholder="Masukkan password"
                   />
                 </div>
@@ -221,8 +221,8 @@ const LoginForm = ({ onLogin, onSwitchToRegister }) => {
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 ${
-                  loading ? "opacity-50 cursor-not-allowed" : "transform hover:scale-[1.02]"
+                className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-full text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 ${
+                  loading ? "opacity-50 cursor-not-allowed" : "transform hover:scale-[1]"
                 }`}
               >
                 {loading ? (

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import { updateUserProfile, getUserProfile } from "../api";
 
 const ProfilSaya = () => {
   const navigate = useNavigate();
@@ -9,22 +10,71 @@ const ProfilSaya = () => {
   const [formData, setFormData] = useState({});
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const userDataStr = localStorage.getItem("userData");
-    const isLoggedIn = localStorage.getItem("isLoggedIn");
+    const loadProfile = async () => {
+      try {
+        setLoading(true);
+        const userDataStr = localStorage.getItem("userData");
+        const isLoggedIn = localStorage.getItem("isLoggedIn");
 
-    if (!isLoggedIn || !userDataStr) {
-      navigate("/login");
-      return;
-    }
+        if (!isLoggedIn || !userDataStr) {
+          navigate("/login");
+          return;
+        }
 
-    const data = JSON.parse(userDataStr);
-    setUserData(data);
-    setFormData(data);
-    if (data.profilePhoto) {
-      setPhotoPreview(data.profilePhoto);
-    }
+        const localData = JSON.parse(userDataStr);
+        const userEmail = localData.email;
+
+        // Fetch from Supabase by email
+        const supabaseData = await getUserProfile(userEmail);
+        
+        if (supabaseData) {
+          // Merge Supabase data dengan local data
+          const mergedData = {
+            ...localData,
+            nama_lengkap: supabaseData.nama_lengkap || localData.nama_lengkap,
+            nama_panggilan: supabaseData.nama_panggilan || localData.nama_panggilan,
+            email: supabaseData.email || localData.email,
+            no_hp: supabaseData.no_hp || localData.no_hp,
+            jenis_kelamin: supabaseData.jenis_kelamin || localData.jenis_kelamin,
+            negara: supabaseData.negara || localData.negara,
+            alamat: supabaseData.alamat || localData.alamat,
+            tanggal_daftar: supabaseData.tanggal_daftar || localData.tanggal_daftar,
+            status: supabaseData.status || localData.status
+          };
+          
+          setUserData(mergedData);
+          setFormData(mergedData);
+          
+          // Update localStorage dengan data terbaru dari Supabase
+          localStorage.setItem("userData", JSON.stringify(mergedData));
+          const profileKey = `userProfile_${userEmail}`;
+          localStorage.setItem(profileKey, JSON.stringify(mergedData));
+        } else {
+          setUserData(localData);
+          setFormData(localData);
+        }
+
+        if (localData.profilePhoto) {
+          setPhotoPreview(localData.profilePhoto);
+        }
+      } catch (err) {
+        console.error("Error loading profile:", err);
+        // Fallback ke localStorage
+        const userDataStr = localStorage.getItem("userData");
+        if (userDataStr) {
+          const localData = JSON.parse(userDataStr);
+          setUserData(localData);
+          setFormData(localData);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProfile();
   }, [navigate]);
 
   const handleInputChange = (e) => {
@@ -38,7 +88,7 @@ const ProfilSaya = () => {
   const handleGenderChange = (gender) => {
     setFormData({
       ...formData,
-      gender: gender,
+      jenis_kelamin: gender,
     });
   };
 
@@ -67,38 +117,61 @@ const ProfilSaya = () => {
     }
   };
 
-  const handleSave = () => {
-    const updatedData = {
-      ...formData,
-      profilePhoto: profilePhoto || formData.profilePhoto,
-    };
-    
-    // Save to userData (for current session)
-    localStorage.setItem("userData", JSON.stringify(updatedData));
-    
-    // Save to user-specific profile key (persistent across login sessions)
-    const userEmail = updatedData.email || userData.email;
-    const profileKey = `userProfile_${userEmail}`;
-    localStorage.setItem(profileKey, JSON.stringify(updatedData));
-    
-    setUserData(updatedData);
-    setFormData(updatedData);
-    setIsEditing(false);
-    setProfilePhoto(null);
-    
-    // Update photoPreview to reflect the saved photo
-    if (updatedData.profilePhoto) {
-      setPhotoPreview(updatedData.profilePhoto);
+  const handleSave = async () => {
+    try {
+      const updatedData = {
+        ...formData,
+        profilePhoto: profilePhoto || formData.profilePhoto,
+      };
+
+      // Save to Supabase
+      await updateUserProfile(userData.email, {
+        nama_lengkap: updatedData.nama_lengkap,
+        nama_panggilan: updatedData.nama_panggilan,
+        no_hp: updatedData.no_hp,
+        jenis_kelamin: updatedData.jenis_kelamin,
+        negara: updatedData.negara,
+        alamat: updatedData.alamat,
+      });
+
+      // Save to localStorage (for profile photo and other local data)
+      localStorage.setItem("userData", JSON.stringify(updatedData));
+      const userEmail = updatedData.email || userData.email;
+      const profileKey = `userProfile_${userEmail}`;
+      localStorage.setItem(profileKey, JSON.stringify(updatedData));
+
+      setUserData(updatedData);
+      setFormData(updatedData);
+      setIsEditing(false);
+      setProfilePhoto(null);
+
+      if (updatedData.profilePhoto) {
+        setPhotoPreview(updatedData.profilePhoto);
+      }
+
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new Event("userDataUpdated"));
+
+      alert("Profil berhasil diperbarui!");
+    } catch (err) {
+      console.error("Error saving profile:", err);
+      alert("Error: " + (err.message || "Gagal menyimpan profil"));
     }
-    
-    // Dispatch custom event to notify other components (like Navbar)
-    window.dispatchEvent(new Event("userDataUpdated"));
-    
-    alert("Profil berhasil diperbarui!");
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="text-gray-600 mb-2">Loading profil...</div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
   if (!userData) {
-    return <div>Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center"><div>Gagal memuat profil</div></div>;
   }
 
   return (
@@ -164,7 +237,7 @@ const ProfilSaya = () => {
 
                 {/* Name and Email */}
                 <div className="flex-1">
-                  <h1 className="text-3xl font-bold text-gray-900">{userData.name || "User"}</h1>
+                  <h1 className="text-3xl font-bold text-gray-900">{userData.nama_lengkap || userData.name || "User"}</h1>
                   <p className="text-gray-500 text-sm">{userData.email}</p>
                 </div>
 
@@ -196,8 +269,8 @@ const ProfilSaya = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
                     <input
                       type="text"
-                      name="name"
-                      value={formData.name || ""}
+                      name="nama_lengkap"
+                      value={formData.nama_lengkap || ""}
                       onChange={handleInputChange}
                       placeholder="Nama lengkap kamu"
                       className="w-full px-4 py-2 border text-black bg-white border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
@@ -207,8 +280,8 @@ const ProfilSaya = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Nama Panggilan</label>
                     <input
                       type="text"
-                      name="nickname"
-                      value={formData.nickname || ""}
+                      name="nama_panggilan"
+                      value={formData.nama_panggilan || ""}
                       onChange={handleInputChange}
                       placeholder="Nama panggilan kamu"
                       className="w-full px-4 py-2 border text-black bg-white border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
@@ -219,14 +292,14 @@ const ProfilSaya = () => {
                 {/* Gender and Country */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Gender</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Jenis Kelamin</label>
                     <div className="flex space-x-6">
                       <label className="flex items-center space-x-2 cursor-pointer">
                         <input
                           type="radio"
-                          name="gender"
+                          name="jenis_kelamin"
                           value="Laki-laki"
-                          checked={formData.gender === "Laki-laki"}
+                          checked={formData.jenis_kelamin === "Laki-laki"}
                           onChange={(e) => handleGenderChange(e.target.value)}
                           className="w-4 h-4 cursor-pointer"
                         />
@@ -235,9 +308,9 @@ const ProfilSaya = () => {
                       <label className="flex items-center space-x-2 cursor-pointer">
                         <input
                           type="radio"
-                          name="gender"
+                          name="jenis_kelamin"
                           value="Perempuan"
-                          checked={formData.gender === "Perempuan"}
+                          checked={formData.jenis_kelamin === "Perempuan"}
                           onChange={(e) => handleGenderChange(e.target.value)}
                           className="w-4 h-4 cursor-pointer"
                         />
@@ -249,8 +322,8 @@ const ProfilSaya = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Negara</label>
                     <input
                       type="text"
-                      name="country"
-                      value={formData.country || ""}
+                      name="negara"
+                      value={formData.negara || ""}
                       onChange={handleInputChange}
                       placeholder="Asal negara kamu"
                       className="w-full px-4 py-2 border text-black bg-white border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
@@ -263,8 +336,8 @@ const ProfilSaya = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">No. Telepon</label>
                   <input
                     type="tel"
-                    name="phone"
-                    value={formData.phone || ""}
+                    name="no_hp"
+                    value={formData.no_hp || ""}
                     onChange={handleInputChange}
                     className="w-full text-black bg-white px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   />
@@ -274,8 +347,8 @@ const ProfilSaya = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Alamat</label>
                   <textarea
-                    name="address"
-                    value={formData.address || ""}
+                    name="alamat"
+                    value={formData.alamat || ""}
                     onChange={handleInputChange}
                     rows="4"
                     className="w-full text-black bg-white px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
@@ -297,41 +370,41 @@ const ProfilSaya = () => {
                 {/* Full Name */}
                 <div>
                   <p className="text-sm font-medium text-gray-500 uppercase">Full Name</p>
-                  <p className="text-lg text-gray-900 mt-1">{userData.name || "-"}</p>
+                  <p className="text-lg text-gray-900 mt-1">{userData.nama_lengkap || "-"}</p>
                 </div>
 
                 {/* Nick Name */}
                 <div>
                   <p className="text-sm font-medium text-gray-500 uppercase">Nick Name</p>
-                  <p className="text-lg text-gray-900 mt-1">{userData.nickname || "-"}</p>
+                  <p className="text-lg text-gray-900 mt-1">{userData.nama_panggilan || "-"}</p>
                 </div>
 
                 {/* Gender */}
                 <div>
-                  <p className="text-sm font-medium text-gray-500 uppercase">Gender</p>
-                  <p className="text-lg text-gray-900 mt-1">{userData.gender || "-"}</p>
+                  <p className="text-sm font-medium text-gray-500 uppercase">Jenis Kelamin</p>
+                  <p className="text-lg text-gray-900 mt-1">{userData.jenis_kelamin || "-"}</p>
                 </div>
 
                 {/* Country */}
                 <div>
-                  <p className="text-sm font-medium text-gray-500 uppercase">Country</p>
-                  <p className="text-lg text-gray-900 mt-1">{userData.country || "-"}</p>
+                  <p className="text-sm font-medium text-gray-500 uppercase">Negara</p>
+                  <p className="text-lg text-gray-900 mt-1">{userData.negara || "-"}</p>
                 </div>
 
                 {/* Phone */}
                 <div>
                   <p className="text-sm font-medium text-gray-500 uppercase">No. Telepon</p>
-                  <p className="text-lg text-gray-900 mt-1">{userData.phone || "-"}</p>
+                  <p className="text-lg text-gray-900 mt-1">{userData.no_hp || "-"}</p>
                 </div>
 
                 {/* Email */}
                 <div>
-                  <p className="text-sm font-medium text-gray-500 uppercase">My Email Address</p>
+                  <p className="text-sm font-medium text-gray-500 uppercase">Email Address</p>
                   <div className="mt-4 flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                     <input type="checkbox" checked readOnly className="w-4 h-4" />
                     <div>
                       <p className="text-sm font-medium text-gray-900">{userData.email}</p>
-                      <p className="text-xs text-gray-500">1 month ago</p>
+                      <p className="text-xs text-gray-500">Verified</p>
                     </div>
                   </div>
                 </div>
@@ -339,7 +412,7 @@ const ProfilSaya = () => {
                 {/* Address */}
                 <div>
                   <p className="text-sm font-medium text-gray-500 uppercase">Alamat</p>
-                  <p className="text-lg text-gray-900 mt-1">{userData.address || "-"}</p>
+                  <p className="text-lg text-gray-900 mt-1">{userData.alamat || "-"}</p>
                 </div>
               </div>
             )}

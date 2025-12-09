@@ -22,20 +22,16 @@ export const registerUser = async (userData) => {
 }
 
 export const loginUser = async (credentials) => {
-  try {
-    const res = await fetch(`${API_URL}/users/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(credentials)
-    })
-    if (!res.ok) {
-      const error = await res.json()
-      throw new Error(error.message || 'Login gagal')
-    }
-    return res.json()
-  } catch (error) {
-    throw error
+  const res = await fetch(`${API_URL}/users/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(credentials)
+  })
+  if (!res.ok) {
+    const error = await res.json()
+    throw new Error(error.message || 'Login gagal')
   }
+  return res.json()
 }
 
 export const getDonations = async () => {
@@ -53,70 +49,77 @@ export const createDonation = async (donationData) => {
 }
 
 export const getDashboardSummary = async () => {
-  try {
-    const res = await fetch(`${API_URL}/dashboard/summary`)
-    const payload = await res.json().catch(() => ({}))
-    if (!res.ok) {
-      throw new Error(payload.error || 'Gagal memuat ringkasan dashboard')
-    }
-    return payload?.data || {
-      totalDonors: 0,
-      totalGoods: 0,
-      totalServices: 0,
-      totalMoney: 0
-    }
-  } catch (error) {
-    throw error
+  const res = await fetch(`${API_URL}/dashboard/summary`)
+  const payload = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(payload.error || 'Gagal memuat ringkasan dashboard')
+  }
+  return payload?.data || {
+    totalDonors: 0,
+    totalGoods: 0,
+    totalServices: 0,
+    totalMoney: 0
   }
 }
 
 // Transparansi Donasi API
 export const getTransparansiByAksi = async (aksiId) => {
-  try {
-    const res = await fetch(`${API_URL}/transparansi/aksi/${aksiId}`)
-    if (!res.ok) throw new Error('Gagal memuat transparansi')
-    return res.json()
-  } catch (error) {
-    throw error
-  }
+  const res = await fetch(`${API_URL}/transparansi/aksi/${aksiId}`)
+  if (!res.ok) throw new Error('Gagal memuat transparansi')
+  return res.json()
 }
 
 export const createTransparansi = async (data) => {
-  try {
-    const res = await fetch(`${API_URL}/transparansi`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    })
-    if (!res.ok) throw new Error('Gagal membuat transparansi')
-    return res.json()
-  } catch (error) {
-    throw error
-  }
+  const res = await fetch(`${API_URL}/transparansi`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  })
+  if (!res.ok) throw new Error('Gagal membuat transparansi')
+  return res.json()
 }
 
 export const updateTransparansi = async (id, data) => {
-  try {
-    const res = await fetch(`${API_URL}/transparansi/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    })
-    if (!res.ok) throw new Error('Gagal update transparansi')
-    return res.json()
-  } catch (error) {
-    throw error
-  }
+  const res = await fetch(`${API_URL}/transparansi/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  })
+  if (!res.ok) throw new Error('Gagal update transparansi')
+  return res.json()
 }
 
 export const deleteTransparansi = async (id) => {
+  const res = await fetch(`${API_URL}/transparansi/${id}`, {
+    method: 'DELETE'
+  })
+  if (!res.ok) throw new Error('Gagal hapus transparansi')
+  return res.json()
+}
+
+// User Profile API
+export const getUserProfile = async (email) => {
   try {
-    const res = await fetch(`${API_URL}/transparansi/${id}`, {
-      method: 'DELETE'
-    })
-    if (!res.ok) throw new Error('Gagal hapus transparansi')
-    return res.json()
+    const res = await fetch(`${API_URL}/users/profile/${email}`)
+    if (!res.ok) {
+      if (res.status === 404) return null
+      throw new Error('Gagal mengambil profil')
+    }
+    const data = await res.json()
+    return data.user || data
   } catch (error) {
-    throw error
+    console.error('Error fetching user profile:', error)
+    return null
   }
+}
+
+export const updateUserProfile = async (email, profileData) => {
+  const res = await fetch(`${API_URL}/users/profile/${email}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(profileData)
+  })
+  if (!res.ok) throw new Error('Gagal mengupdate profil')
+  const data = await res.json()
+  return data
 }

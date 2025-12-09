@@ -52,10 +52,10 @@ export const createUser = async (req, res) => {
 // register user baru (from public form)
 export const registerUser = async (req, res) => {
   try {
-    const { nama, email, password, no_hp, alamat, role } = req.body
+    const { nama_lengkap, nama_panggilan, email, password, no_hp, jenis_kelamin, negara, alamat } = req.body
 
-    if (!nama || !email || !password) {
-      return res.status(400).json({ error: 'Nama, email, dan password wajib diisi' })
+    if (!nama_lengkap || !email || !password) {
+      return res.status(400).json({ error: 'Nama lengkap, email, dan password wajib diisi' })
     }
 
     const { data: existingUser, error: existingError } = await supabase
@@ -76,22 +76,26 @@ export const registerUser = async (req, res) => {
       .from('users')
       .insert([
         {
-          nama,
+          nama_lengkap,
+          nama_panggilan: nama_panggilan || null,
           email,
           password: hashedPassword,
-          no_hp,
-          alamat,
-          role: role || 'donatur'
+          no_hp: no_hp || null,
+          jenis_kelamin: jenis_kelamin || null,
+          negara: negara || null,
+          alamat: alamat || null,
+          status: 'aktif'
         }
       ])
-      .select('id, nama, email, no_hp, alamat, role')
+      .select('id, nama_lengkap, nama_panggilan, email, no_hp, jenis_kelamin, negara, alamat, tanggal_daftar, status')
 
     if (error) throw error
 
     res.status(201).json({
       success: true,
       message: 'Registrasi berhasil',
-      user: data?.[0]
+      user: data?.[0],
+      token: 'dummy-token'
     })
   } catch (err) {
     console.error('❌ Error saat registrasi:', {
@@ -156,5 +160,74 @@ export const loginUser = async (req, res) => {
   } catch (err) {
     console.error('❌ Error saat login:', err)
     res.status(500).json({ error: 'Terjadi kesalahan saat login' })
+  }
+}
+
+// GET user profile by email
+export const getUserProfileByEmail = async (req, res) => {
+  try {
+    const { email } = req.params
+
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, nama_lengkap, nama_panggilan, email, no_hp, jenis_kelamin, negara, alamat, tanggal_daftar, status')
+      .eq('email', email)
+      .maybeSingle()
+
+    if (error) throw error
+
+    if (!user) {
+      return res.status(404).json({ error: 'User tidak ditemukan' })
+    }
+
+    res.json({ user })
+  } catch (err) {
+    console.error('❌ Error saat ambil profil:', err)
+    res.status(500).json({ error: 'Gagal mengambil profil user' })
+  }
+}
+
+// PUT update user profile by email
+export const updateUserProfileByEmail = async (req, res) => {
+  try {
+    const { email } = req.params
+    const { nama_lengkap, nama_panggilan, no_hp, jenis_kelamin, negara, alamat } = req.body
+
+    const { data: user, error: fetchError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle()
+
+    if (fetchError) throw fetchError
+
+    if (!user) {
+      return res.status(404).json({ error: 'User tidak ditemukan' })
+    }
+
+    const { data: updatedUser, error } = await supabase
+      .from('users')
+      .update({
+        nama_lengkap: nama_lengkap || undefined,
+        nama_panggilan: nama_panggilan || undefined,
+        no_hp: no_hp || undefined,
+        jenis_kelamin: jenis_kelamin || undefined,
+        negara: negara || undefined,
+        alamat: alamat || undefined
+      })
+      .eq('email', email)
+      .select('id, nama_lengkap, nama_panggilan, email, no_hp, jenis_kelamin, negara, alamat, tanggal_daftar, status')
+      .single()
+
+    if (error) throw error
+
+    res.json({
+      success: true,
+      message: 'Profil berhasil diperbarui',
+      user: updatedUser
+    })
+  } catch (err) {
+    console.error('❌ Error saat update profil:', err)
+    res.status(500).json({ error: 'Gagal mengupdate profil' })
   }
 }
