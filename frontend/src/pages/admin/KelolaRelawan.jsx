@@ -6,27 +6,37 @@ const KelolaRelawan = () => {
   const [pengajuanJasaList, setPengajuanJasaList] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedPengajuan, setSelectedPengajuan] = useState(null);
+  const [aksiList, setAksiList] = useState([]);
   const [formData, setFormData] = useState({
     nama: "",
     email: "",
     noHp: "",
     keahlian: "",
-    status: "aktif",
+    status: "Aktif",
   });
 
   useEffect(() => {
     fetchRelawan();
     fetchPengajuanJasa();
+    fetchAksi();
     
     // Listen for storage changes from other tabs/windows
     const handleStorageChange = () => {
       fetchRelawan();
       fetchPengajuanJasa();
+      fetchAksi();
     };
     
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
+
+  const fetchAksi = () => {
+    const data = JSON.parse(localStorage.getItem("aksiList") || "[]");
+    setAksiList(data);
+  };
 
   const fetchRelawan = () => {
     const data = JSON.parse(localStorage.getItem("relawanList") || "[]");
@@ -55,7 +65,7 @@ const KelolaRelawan = () => {
       email: pengajuan.email,
       noHp: pengajuan.noHp,
       keahlian: pengajuan.deskripsi,
-      status: "aktif",
+      status: "Aktif",
       dariPengajuanJasa: true,
       tanggalDibuatRelawan: new Date().toLocaleDateString("id-ID"),
     };
@@ -118,7 +128,7 @@ const KelolaRelawan = () => {
   const handleCancel = () => {
     setIsEditing(false);
     setCurrentId(null);
-    setFormData({ nama: "", email: "", noHp: "", keahlian: "", status: "aktif" });
+    setFormData({ nama: "", email: "", noHp: "", keahlian: "", status: "Aktif" });
   };
 
   const handleClearAllPengajuanJasa = () => {
@@ -133,11 +143,6 @@ const KelolaRelawan = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Kelola Relawan & Pengajuan Jasa</h2>
-        <p className="text-gray-600">Kelola data relawan dan review pengajuan donasi jasa</p>
-      </div>
-
       {/* Tabs */}
       <div className="flex space-x-4 border-b border-gray-200">
         <button
@@ -164,7 +169,7 @@ const KelolaRelawan = () => {
 
       {/* Tab: Data Relawan */}
       {activeTab === "relawan" && (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="bg-white rounded-xl border overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -190,10 +195,10 @@ const KelolaRelawan = () => {
                     <td className="px-6 py-4 text-sm text-gray-500">{relawan.keahlian}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          relawan.status === "aktif"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
+                        className={`px-4 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          relawan.status === "Aktif"
+                            ? "bg-green-50 border border-green-600 text-green-800"
+                            : "bg-red-100 border border-red-600 text-red-800"
                         }`}
                       >
                         {relawan.status}
@@ -230,7 +235,7 @@ const KelolaRelawan = () => {
                 onClick={handleClearAllPengajuanJasa}
                 className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition"
               >
-                🗑️ Bersihkan Semua Data
+                Bersihkan Semua Data
               </button>
             </div>
           )}
@@ -239,76 +244,54 @@ const KelolaRelawan = () => {
               <p className="text-gray-500 text-lg">Tidak ada pengajuan jasa</p>
             </div>
           ) : (
-            pengajuanJasaList.map((pengajuan) => (
-              <div key={pengajuan.id} className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-600">
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wide">Nama</p>
-                    <p className="text-lg font-semibold text-gray-900">{pengajuan.nama}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wide">Email</p>
-                    <p className="text-lg font-semibold text-gray-900">{pengajuan.email}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wide">No HP</p>
-                    <p className="text-lg font-semibold text-gray-900">{pengajuan.noHp}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wide">Status</p>
-                    <p className={`text-lg font-semibold ${
-                      pengajuan.status === "pending" ? "text-yellow-600" :
-                      pengajuan.status === "diterima" ? "text-green-600" :
-                      "text-red-600"
-                    }`}>
-                      {pengajuan.status === "pending" ? "Menunggu Review" :
-                       pengajuan.status === "diterima" ? "Diterima" : "Ditolak"}
-                    </p>
-                  </div>
-                </div>
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              {pengajuanJasaList.map((pengajuan, index) => {
+                const aksiName = aksiList.find(a => a.id === parseInt(pengajuan.aksi_id) || a.id === pengajuan.aksi_id)?.judul || "Aksi Tidak Ditemukan";
+                return (
+                  <div
+                    key={pengajuan.id}
+                    onClick={() => {
+                      setSelectedPengajuan(pengajuan);
+                      setShowDetailModal(true);
+                    }}
+                    className={`px-4 py-3 border-b border-gray-200 hover:bg-gray-50 cursor-pointer transition flex items-center gap-4 ${
+                      index === 0 ? "" : ""
+                    }`}
+                  >
+                    {/* Status dot */}
+                    <div className="flex-shrink-0">
+                      <div className={`w-3 h-3 rounded-full ${
+                        pengajuan.status === "pending" ? "bg-yellow-500" :
+                        pengajuan.status === "diterima" ? "bg-green-500" :
+                        "bg-red-500"
+                      }`}></div>
+                    </div>
 
-                <div className="mb-4">
-                  <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Deskripsi Jasa</p>
-                  <p className="text-gray-700">{pengajuan.deskripsi}</p>
-                </div>
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-semibold text-gray-900 truncate">{pengajuan.nama}</p>
+                        <span className={`text-xs font-medium px-2 py-1 rounded-full flex-shrink-0 ${
+                          pengajuan.status === "pending" ? "bg-yellow-100 text-yellow-700" :
+                          pengajuan.status === "diterima" ? "bg-green-100 text-green-700" :
+                          "bg-red-100 text-red-700"
+                        }`}>
+                          {pengajuan.status === "pending" ? "Menunggu" :
+                           pengajuan.status === "diterima" ? "Diterima" : "Ditolak"}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 truncate">{pengajuan.email} • {aksiName}</p>
+                      <p className="text-xs text-gray-500 mt-1 line-clamp-1">{pengajuan.deskripsi}</p>
+                    </div>
 
-                <div className="mb-4">
-                  <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Ketersediaan</p>
-                  <p className="text-gray-700">{pengajuan.ketersediaan}</p>
-                </div>
-
-                {pengajuan.status === "ditolak" && pengajuan.alasanPenolakan && (
-                  <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
-                    <p className="text-xs text-red-600 uppercase tracking-wide mb-1">Alasan Penolakan</p>
-                    <p className="text-red-700">{pengajuan.alasanPenolakan}</p>
+                    {/* Date */}
+                    <div className="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap">
+                      {pengajuan.tanggalPengajuan}
+                    </div>
                   </div>
-                )}
-
-                {pengajuan.status === "pending" && (
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      onClick={() => handleApprovePengajuanJasa(pengajuan.id)}
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition"
-                    >
-                      Terima
-                    </button>
-                    <button
-                      onClick={() => handleRejectPengajuanJasa(pengajuan.id)}
-                      className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition"
-                    >
-                      Tolak
-                    </button>
-                  </div>
-                )}
-
-                {pengajuan.status !== "pending" && (
-                  <div className="text-sm text-gray-500 mt-4">
-                    {pengajuan.status === "diterima" && `Diterima pada: ${pengajuan.tanggalDisetujui}`}
-                    {pengajuan.status === "ditolak" && `Ditolak pada: ${pengajuan.tanggalDitolak}`}
-                  </div>
-                )}
-              </div>
-            ))
+                );
+              })}
+            </div>
           )}
         </div>
       )}
@@ -362,8 +345,8 @@ const KelolaRelawan = () => {
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                 >
-                  <option value="aktif">Aktif</option>
-                  <option value="nonaktif">Nonaktif</option>
+                  <option value="Aktif">Aktif</option>
+                  <option value="Nonaktif">Nonaktif</option>
                 </select>
               </div>
             </div>
@@ -381,6 +364,130 @@ const KelolaRelawan = () => {
                 Batal
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Detail Modal untuk Pengajuan Jasa */}
+      {showDetailModal && selectedPengajuan && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto hide-scrollbar">
+            {/* Header */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+              <h3 className="text-2xl font-bold text-gray-900">Detail Pengajuan Jasa</h3>
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-6">
+              {/* Nama & Email */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Nama</label>
+                  <p className="text-lg font-semibold text-gray-900">{selectedPengajuan.nama}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Email</label>
+                  <p className="text-lg font-semibold text-gray-900">{selectedPengajuan.email}</p>
+                </div>
+              </div>
+
+              {/* No HP & Status */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">No HP</label>
+                  <p className="text-lg font-semibold text-gray-900">{selectedPengajuan.noHp}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Status</label>
+                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                    selectedPengajuan.status === "pending" ? "bg-yellow-100 text-yellow-700" :
+                    selectedPengajuan.status === "diterima" ? "bg-green-100 text-green-700" :
+                    "bg-red-100 text-red-700"
+                  }`}>
+                    {selectedPengajuan.status === "pending" ? "Menunggu Review" :
+                     selectedPengajuan.status === "diterima" ? "Diterima" : "Ditolak"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Deskripsi Jasa */}
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-2">Jasa yang Ditawarkan</label>
+                <p className="text-gray-700">{selectedPengajuan.deskripsi}</p>
+              </div>
+
+              {/* Pengalaman */}
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-2">Pengalaman</label>
+                <div className="bg-gray-50 rounded-lg p-4 max-h-40 overflow-y-auto">
+                  <p className="text-gray-700 whitespace-pre-wrap">{selectedPengajuan.pengalaman}</p>
+                </div>
+              </div>
+
+              {/* CV Download */}
+              {selectedPengajuan.cv && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-2">CV</label>
+                  <button
+                    onClick={() => {
+                      const link = document.createElement('a');
+                      link.href = selectedPengajuan.cv;
+                      link.download = `${selectedPengajuan.nama}_CV.pdf`;
+                      link.click();
+                    }}
+                    className="px-4 py-2 bg-blue-50 border border-blue-600 text-blue-700 rounded-lg hover:bg-blue-200 transition font-medium"
+                  >
+                    Download CV
+                  </button>
+                </div>
+              )}
+
+              {/* Aksi */}
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-2">Aksi yang Dipilih</label>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-blue-900 font-medium">
+                    {aksiList.find(a => a.id === parseInt(selectedPengajuan.aksi_id) || a.id === selectedPengajuan.aksi_id)?.judul || "Aksi Tidak Ditemukan"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Tanggal Pengajuan */}
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-1">Tanggal Pengajuan</label>
+                <p className="text-gray-700">{selectedPengajuan.tanggalPengajuan}</p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            {selectedPengajuan.status === "pending" && (
+              <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 grid grid-cols-2 gap-3 rounded-b-2xl">
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    handleRejectPengajuanJasa(selectedPengajuan.id);
+                  }}
+                  className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition"
+                >
+                  Tolak
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    handleApprovePengajuanJasa(selectedPengajuan.id);
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition"
+                >
+                  Terima
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

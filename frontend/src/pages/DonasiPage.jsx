@@ -22,6 +22,9 @@ const DonasiPage = () => {
     jumlahDonasi: "",
     selectedBarang: [],
     selectedJasa: [],
+    pengalaman: "", // Untuk donasi Jasa
+    cvFile: null, // Untuk donasi Jasa
+    cvPreview: "", // Untuk preview nama file CV
     
     // Step 3: Konfirmasi
     buktiPembayaran: null,
@@ -131,6 +134,29 @@ const DonasiPage = () => {
     });
   };
 
+  const handleCVUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.type !== "application/pdf") {
+        alert("File harus dalam format PDF!");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Ukuran file terlalu besar! Maksimal 5MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({
+          ...formData,
+          cvFile: reader.result,
+          cvPreview: file.name,
+        });
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  };
+
   const handleNextStep = () => {
     if (currentStep === 1) {
       if (!formData.namaLengkap || !formData.email || !formData.noHp) {
@@ -157,6 +183,16 @@ const DonasiPage = () => {
 
       if (donationType === "Jasa" && formData.selectedJasa.length === 0) {
         alert("Pilih minimal 1 jasa!");
+        return;
+      }
+
+      if (donationType === "Jasa" && !formData.pengalaman.trim()) {
+        alert("Tuliskan pengalaman Anda!");
+        return;
+      }
+
+      if (donationType === "Jasa" && !formData.cvFile) {
+        alert("Upload file CV terlebih dahulu!");
         return;
       }
     }
@@ -213,11 +249,13 @@ const DonasiPage = () => {
     if (donationType === "Jasa") {
       const jasaData = {
         id: Date.now(),
+        aksi_id: aksi.id, // Tambahkan aksi_id
         nama: formData.namaLengkap,
         email: formData.email,
         noHp: formData.noHp,
         deskripsi: formData.selectedJasa.join(", "),
-        ketersediaan: "Sesuai dengan kebutuhan aksi",
+        pengalaman: formData.pengalaman, // Tambahkan pengalaman
+        cv: formData.cvFile, // Tambahkan CV file (base64 atau binary)
         status: "pending",
         tanggalPengajuan: new Date().toLocaleDateString("id-ID"),
       };
@@ -553,7 +591,7 @@ const DonasiPage = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-3">
                       Pilih Jasa yang Akan Diberikan <span className="text-red-500">*</span>
                     </label>
-                    <div className="space-y-2">
+                    <div className="space-y-2 mb-6">
                       {(typeof aksi.jasaDibutuhkan === "string"
                         ? aksi.jasaDibutuhkan.split(", ")
                         : aksi.jasaDibutuhkan || []
@@ -573,6 +611,49 @@ const DonasiPage = () => {
                             <span className="text-gray-700 text-base">{item}</span>
                           </label>
                         ))}
+                    </div>
+
+                    {/* Pengalaman Textarea */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Pengalaman <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        value={formData.pengalaman}
+                        onChange={(e) => setFormData({ ...formData, pengalaman: e.target.value })}
+                        placeholder="Tuliskan pengalaman Anda dalam memberikan jasa ini..."
+                        rows="5"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black bg-white"
+                      />
+                    </div>
+
+                    {/* CV Upload */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Upload CV (PDF) <span className="text-red-500">*</span>
+                      </label>
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition">
+                        <input
+                          type="file"
+                          accept=".pdf"
+                          onChange={handleCVUpload}
+                          className="hidden"
+                          id="cv-upload"
+                        />
+                        <label htmlFor="cv-upload" className="cursor-pointer block">
+                          {formData.cvPreview ? (
+                            <div className="space-y-2">
+                              <p className="text-sm text-green-600 font-medium">✓ File terpilih</p>
+                              <p className="text-xs text-gray-600">{formData.cvPreview}</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              <p className="text-gray-600 font-medium">Klik atau drag file PDF di sini</p>
+                              <p className="text-xs text-gray-400">Max 5MB. Format: PDF</p>
+                            </div>
+                          )}
+                        </label>
+                      </div>
                     </div>
                   </div>
                 )}

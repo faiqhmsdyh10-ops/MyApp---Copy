@@ -30,6 +30,11 @@ const Navbar = () => {
     }
   }, [location]); // Re-check when location changes
 
+  useEffect(() => {
+    // Scroll to top when location changes
+    window.scrollTo(0, 0);
+  }, [location]);
+
   // Add storage event listener to update userData when it changes in localStorage
   useEffect(() => {
     const handleStorageChange = () => {

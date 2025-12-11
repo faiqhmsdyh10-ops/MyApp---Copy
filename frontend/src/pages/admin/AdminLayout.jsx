@@ -22,9 +22,9 @@ const AdminLayout = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="admin-layout min-h-screen bg-gray-100 flex">
+    <div className="admin-layout h-screen bg-gray-100 flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-blue-900 text-white flex flex-col">
+      <aside className="w-64 bg-blue-900 text-white flex flex-col rounded-r-3xl">
         {/* Logo */}
         <div className="p-6 border-b border-blue-800">
           <div className="flex items-center space-x-3">
@@ -45,13 +45,12 @@ const AdminLayout = () => {
               <li key={item.path}>
                 <button
                   onClick={() => navigate(item.path)}
-                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition ${
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition ${
                     isActive(item.path)
-                      ? "bg-blue-800 text-white"
+                      ? "bg-white text-blue-800"
                       : "text-blue-100 hover:bg-blue-800"
                   }`}
                 >
-                  <span className="text-xl">{item.icon}</span>
                   <span className="font-medium">{item.label}</span>
                 </button>
               </li>
@@ -63,9 +62,8 @@ const AdminLayout = () => {
         <div className="p-4 border-t border-blue-800">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-blue-100 hover:bg-blue-800 transition"
+            className="w-full bg-red-500 flex items-center space-x-3 px-4 py-3 rounded-xl text-white hover:bg-red-600 transition"
           >
-            <span className="text-xl">🚪</span>
             <span className="font-medium">Keluar</span>
           </button>
         </div>

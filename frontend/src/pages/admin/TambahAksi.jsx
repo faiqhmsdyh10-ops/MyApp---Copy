@@ -185,12 +185,7 @@ const TambahAksi = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Tambah Aksi Baru</h2>
-        <p className="text-gray-600">Buat aksi sosial baru untuk ditampilkan di halaman publik</p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="bg-white rounded-2xl border p-6 space-y-6">
         {/* Judul */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -200,7 +195,7 @@ const TambahAksi = () => {
             type="text"
             value={form.judul}
             onChange={(e) => setForm({ ...form, judul: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full text-black bg-white px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Contoh: Bantu Korban Banjir Jakarta"
             required
           />
@@ -214,7 +209,7 @@ const TambahAksi = () => {
           <textarea
             value={form.deskripsi}
             onChange={(e) => setForm({ ...form, deskripsi: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full text-black bg-white px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows="5"
             placeholder="Jelaskan detail aksi sosial ini..."
             required
@@ -233,7 +228,7 @@ const TambahAksi = () => {
                   type="checkbox"
                   checked={form.kategori.includes(kategori)}
                   onChange={() => handleKategoriChange(kategori)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 cursor-pointer text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <span className="text-gray-700">{kategori}</span>
               </label>
@@ -254,7 +249,7 @@ const TambahAksi = () => {
                 const value = e.target.value.replace(/\D/g, "");
                 setForm({ ...form, targetDonasi: value });
               }}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full text-black bg-white px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Masukkan target donasi"
             />
             {form.targetDonasi && (
@@ -264,30 +259,6 @@ const TambahAksi = () => {
             )}
           </div>
         )}
-
-        {/* Upload Gambar */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Gambar Aksi
-          </label>
-          <div className="mt-1 flex items-center space-x-4">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-            />
-          </div>
-          {form.imagePreview && (
-            <div className="mt-4">
-              <img
-                src={form.imagePreview}
-                alt="Preview"
-                className="w-full max-w-md h-48 object-cover rounded-lg border border-gray-300"
-              />
-            </div>
-          )}
-        </div>
 
         {/* Barang Dibutuhkan - Only if "Barang" is checked */}
         {form.kategori.includes("Barang") && (
@@ -300,7 +271,7 @@ const TambahAksi = () => {
               value={barangInput}
               onChange={(e) => setBarangInput(e.target.value)}
               onKeyDown={handleAddBarang}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full text-black bg-white px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Ketik nama barang dan tekan Enter"
             />
             <p className="mt-1 text-xs text-gray-500">Tekan Enter untuk menambahkan barang</p>
@@ -310,7 +281,7 @@ const TambahAksi = () => {
               {form.barangDibutuhkan.map((item, index) => (
                 <div
                   key={index}
-                  className="flex items-center space-x-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                  className="flex items-center space-x-2 border border-blue-600 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
                 >
                   <span>{item}</span>
                   <button
@@ -337,7 +308,7 @@ const TambahAksi = () => {
               value={jasaInput}
               onChange={(e) => setJasaInput(e.target.value)}
               onKeyDown={handleAddJasa}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full text-black bg-white px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Ketik jasa yang dibutuhkan dan tekan Enter"
             />
             <p className="mt-1 text-xs text-gray-500">Tekan Enter untuk menambahkan jasa</p>
@@ -347,7 +318,7 @@ const TambahAksi = () => {
               {form.jasaDibutuhkan.map((item, index) => (
                 <div
                   key={index}
-                  className="flex items-center space-x-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm"
+                  className="flex items-center space-x-2 border border-green-600 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm"
                 >
                   <span>{item}</span>
                   <button
@@ -363,6 +334,30 @@ const TambahAksi = () => {
           </div>
         )}
 
+        {/* Upload Gambar */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Gambar Aksi
+          </label>
+          <div className="mt-1 flex items-center space-x-4">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="block cursor-pointerw-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+          </div>
+          {form.imagePreview && (
+            <div className="mt-4">
+              <img
+                src={form.imagePreview}
+                alt="Preview"
+                className="w-full max-w-md h-48 object-cover rounded-lg border border-gray-300"
+              />
+            </div>
+          )}
+        </div>
+
         {/* Status */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -371,7 +366,7 @@ const TambahAksi = () => {
           <select
             value={form.status}
             onChange={(e) => setForm({ ...form, status: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full text-black bg-white px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="aktif">Aktif</option>
             <option value="selesai">Selesai</option>
@@ -383,14 +378,14 @@ const TambahAksi = () => {
         <div className="flex space-x-4">
           <button
             type="submit"
-            className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-medium"
+            className="flex-1 bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition font-medium"
           >
             Simpan Aksi
           </button>
           <button
             type="button"
             onClick={() => navigate("/admin/kelola-aksi")}
-            className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium"
+            className="px-6 py-3 text-black border border-gray-300 rounded-xl hover:bg-gray-50 transition font-medium"
           >
             Batal
           </button>
