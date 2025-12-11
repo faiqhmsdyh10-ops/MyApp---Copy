@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from "react";
+import { X, Download } from "lucide-react";
 
 const KelolaBarang = () => {
   const [barangList, setBarangList] = useState([]);
   const [filterStatus, setFilterStatus] = useState("semua");
+  const [showModalTerima, setShowModalTerima] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedBarang, setSelectedBarang] = useState(null);
+  const [formDataTerima, setFormDataTerima] = useState({
+    foto: null,
+    fotoPreview: "",
+    tanggalTerima: new Date().toISOString().split("T")[0],
+  });
 
   useEffect(() => {
     fetchBarang();
@@ -22,14 +31,65 @@ const KelolaBarang = () => {
     console.log("Data barang dimuat:", data);
   };
 
-  const handleTandaiDiterima = (id) => {
+  const handleOpenModalTerima = (barang) => {
+    setSelectedBarang(barang);
+    setFormDataTerima({
+      foto: null,
+      fotoPreview: "",
+      tanggalTerima: new Date().toISOString().split("T")[0],
+    });
+    setShowModalTerima(true);
+  };
+
+  const handleFotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        alert("Hanya file gambar yang diperbolehkan (JPG, PNG, dll)");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Ukuran file maksimal 5MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormDataTerima(prev => ({
+          ...prev,
+          foto: reader.result,
+          fotoPreview: file.name,
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleTandaiDiterima = () => {
+    if (!formDataTerima.foto) {
+      alert("Silakan upload foto bukti barang diterima!");
+      return;
+    }
+    if (!formDataTerima.tanggalTerima) {
+      alert("Silakan pilih tanggal penerimaan!");
+      return;
+    }
+
     const updatedList = barangList.map(b =>
-      b.id === id
-        ? { ...b, status: "diterima", tanggalDiterima: new Date().toLocaleDateString("id-ID") }
+      b.id === selectedBarang.id
+        ? { 
+            ...b, 
+            status: "diterima", 
+            tanggalDiterima: formDataTerima.tanggalTerima,
+            buktiTerima: {
+              foto: formDataTerima.foto,
+              tanggalTerima: formDataTerima.tanggalTerima,
+            }
+          }
         : b
     );
     localStorage.setItem("donasiBarangList", JSON.stringify(updatedList));
     setBarangList(updatedList);
+    setShowModalTerima(false);
     alert("Barang berhasil ditandai sebagai diterima!");
   };
 
@@ -42,38 +102,20 @@ const KelolaBarang = () => {
     }
   };
 
+  const handleOpenDetail = (barang) => {
+    setSelectedBarang(barang);
+    setShowDetailModal(true);
+  };
+
   const getFilteredBarang = () => {
     if (filterStatus === "semua") return barangList;
     return barangList.filter(b => b.status === filterStatus);
   };
 
   const filteredBarang = getFilteredBarang();
-  const barangBelumDiterima = barangList.filter(b => b.status === "belum diterima").length;
-  const barangSudahDiterima = barangList.filter(b => b.status === "diterima").length;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Kelola Donasi Barang</h2>
-        <p className="text-gray-600">Kelola dan track barang donasi yang telah dikirimkan</p>
-      </div>
-
-      {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <p className="text-gray-600 text-sm mb-2">Total Barang</p>
-          <p className="text-4xl font-bold text-blue-600">{barangList.length}</p>
-        </div>
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <p className="text-gray-600 text-sm mb-2">Belum Diterima</p>
-          <p className="text-4xl font-bold text-yellow-600">{barangBelumDiterima}</p>
-        </div>
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <p className="text-gray-600 text-sm mb-2">Sudah Diterima</p>
-          <p className="text-4xl font-bold text-green-600">{barangSudahDiterima}</p>
-        </div>
-      </div>
-
       {/* Filter */}
       <div className="flex gap-3">
         <button
@@ -109,7 +151,7 @@ const KelolaBarang = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-lg shadow-md overflow-x-auto">
+      <div className="bg-white rounded-xl border overflow-x-auto">
         <table className="w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -132,7 +174,7 @@ const KelolaBarang = () => {
               </tr>
             ) : (
               filteredBarang.map((barang) => (
-                <tr key={barang.id} className="hover:bg-gray-50">
+                <tr key={barang.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => handleOpenDetail(barang)}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{barang.jenisBarang}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{barang.judulAksi}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{barang.namaPendonasi}</td>
@@ -154,18 +196,18 @@ const KelolaBarang = () => {
                       {barang.status === "diterima" ? "Diterima" : "Belum Diterima"}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-y-2" onClick={(e) => e.stopPropagation()}>
                     {barang.status === "belum diterima" && (
                       <button
-                        onClick={() => handleTandaiDiterima(barang.id)}
-                        className="text-blue-600 hover:text-blue-900 font-medium"
+                        onClick={() => handleOpenModalTerima(barang)}
+                        className="block w-full text-center bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 font-medium transition"
                       >
                         Terima
                       </button>
                     )}
                     <button
                       onClick={() => handleHapus(barang.id)}
-                      className="text-red-600 hover:text-red-900 font-medium"
+                      className="block w-full text-center bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 font-medium transition"
                     >
                       Hapus
                     </button>
@@ -176,6 +218,217 @@ const KelolaBarang = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Modal Terima Barang */}
+      {showModalTerima && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto hide-scrollbar">
+            <div className="sticky top-0 bg-white border-b flex items-center justify-between px-6 py-4">
+              <h3 className="text-lg font-bold text-gray-900">Konfirmasi Penerimaan Barang</h3>
+              <button
+                onClick={() => setShowModalTerima(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Info Barang */}
+              <div className="bg-gray-50 border text-black text-sm rounded-lg p-4 space-y-2">
+                <p><strong>Jenis Barang:</strong> {selectedBarang?.jenisBarang}</p>
+                <p><strong>Judul Aksi:</strong> {selectedBarang?.judulAksi}</p>
+                <p><strong>Pendonasi:</strong> {selectedBarang?.namaPendonasi}</p>
+              </div>
+
+              {/* Upload Foto */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Foto Bukti Penerimaan *
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg px-6 py-4 text-center hover:border-blue-500 transition cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFotoChange}
+                    className="hidden"
+                    id="fotoInput"
+                  />
+                  <label htmlFor="fotoInput" className="cursor-pointer block">
+                    {formDataTerima.fotoPreview ? (
+                      <div>
+                        <p className="text-sm font-medium text-green-600">{formDataTerima.fotoPreview}</p>
+                        {formDataTerima.foto && (
+                          <img
+                            src={formDataTerima.foto}
+                            alt="Preview"
+                            className="mt-3 max-h-32 mx-auto rounded"
+                          />
+                        )}
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="text-gray-600">Klik untuk upload foto</p>
+                        <p className="text-xs text-gray-500 mt-1">JPG, PNG (Max 5MB)</p>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
+
+              {/* Tanggal Terima */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tanggal Penerimaan *
+                </label>
+                <input
+                  type="date"
+                  value={formDataTerima.tanggalTerima}
+                  onChange={(e) =>
+                    setFormDataTerima(prev => ({
+                      ...prev,
+                      tanggalTerima: e.target.value
+                    }))
+                  }
+                  className="w-full text-black bg-white px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setShowModalTerima(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-medium"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleTandaiDiterima}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
+                >
+                  Konfirmasi Terima
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Detail Barang */}
+      {showDetailModal && selectedBarang && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto hide-scrollbar">
+            <div className="sticky top-0 bg-white border-b flex items-center justify-between p-6">
+              <h3 className="text-lg font-bold text-gray-900">Detail Barang Donasi</h3>
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Info Umum */}
+              <div className="space-y-3">
+                <h4 className="font-bold text-gray-900">Informasi Barang</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Jenis Barang</p>
+                    <p className="font-medium text-gray-900">{selectedBarang.jenisBarang}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Status</p>
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                      selectedBarang.status === "diterima"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}>
+                      {selectedBarang.status === "diterima" ? "Diterima" : "Belum Diterima"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Info Pendonasi */}
+              <div className="space-y-3">
+                <h4 className="font-bold text-gray-900">Informasi Pendonasi</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Nama</p>
+                    <p className="font-medium text-gray-900">{selectedBarang.namaPendonasi}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Email</p>
+                    <p className="font-medium text-gray-900">{selectedBarang.emailPendonasi}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">No. HP</p>
+                    <p className="font-medium text-gray-900">{selectedBarang.nohpPendonasi}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Info Aksi */}
+              <div className="space-y-3">
+                <h4 className="font-bold text-gray-900">Informasi Aksi</h4>
+                <div>
+                  <p className="text-sm text-gray-500">Judul Aksi</p>
+                  <p className="font-medium text-gray-900">{selectedBarang.judulAksi}</p>
+                </div>
+              </div>
+
+              {/* Info Pengiriman */}
+              <div className="space-y-3">
+                <h4 className="font-bold text-gray-900">Informasi Pengiriman</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">No. Resi</p>
+                    <code className="bg-gray-100 text-black px-2 py-1 rounded font-medium">{selectedBarang.nomorResi}</code>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Tanggal Dikirim</p>
+                    <p className="font-medium text-gray-900">{selectedBarang.tanggalDikirim}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bukti Penerimaan */}
+              {selectedBarang.buktiTerima && (
+                <div className="space-y-3 border-t pt-6">
+                  <h4 className="font-bold text-gray-900">Bukti Penerimaan</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Tanggal Diterima</p>
+                      <p className="font-medium text-gray-900">{selectedBarang.buktiTerima.tanggalTerima}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 mb-2">Foto Bukti</p>
+                    {selectedBarang.buktiTerima.foto && (
+                      <div className="border rounded-lg overflow-hidden">
+                        <img
+                          src={selectedBarang.buktiTerima.foto}
+                          alt="Bukti Penerimaan"
+                          className="w-full max-h-80 object-cover"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Close Button */}
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
