@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { createTransparansi } from '../api'
+import { ImagePlus } from "lucide-react";
 
 const FormUpdateTransparansi = ({ onClose, aksiId, onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -80,12 +81,11 @@ const FormUpdateTransparansi = ({ onClose, aksiId, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto hide-scrollbar">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-lg">
           <div>
-            <h3 className="text-2xl font-bold text-gray-900">📝 Update Transparansi Donasi</h3>
-            <p className="text-sm text-gray-500 mt-1">Bagikan progress kepada semua pendonasi</p>
+            <h3 className="text-2xl font-bold text-gray-900">Update Progress Donasi</h3>
           </div>
           <button
             onClick={onClose}
@@ -99,20 +99,20 @@ const FormUpdateTransparansi = ({ onClose, aksiId, onSuccess }) => {
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Tanggal */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">📅 Tanggal Update</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Tanggal Update</label>
             <input
               type="date"
               name="tanggal"
               value={formData.tanggal}
               onChange={handleInputChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full text-black bg-white px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
 
           {/* Judul */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              📌 Judul Update <span className="text-red-500">*</span>
+              Judul Update <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -120,28 +120,26 @@ const FormUpdateTransparansi = ({ onClose, aksiId, onSuccess }) => {
               value={formData.judul}
               onChange={handleInputChange}
               placeholder="Contoh: Barang sudah terkumpul 50%"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
+              className="w-full text-black bg-white px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             />
-            <p className="text-xs text-gray-400 mt-1">Judul yang menarik akan membuat pendonasi lebih tertarik</p>
           </div>
 
           {/* Deskripsi */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">📄 Deskripsi (Opsional)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Deskripsi</label>
             <textarea
               name="deskripsi"
               value={formData.deskripsi}
               onChange={handleInputChange}
               placeholder="Jelaskan detail progress donasi, terima kasih kepada pendonasi, atau rencana ke depan..."
               rows="5"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
+              className="w-full text-black bg-white px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             />
-            <p className="text-xs text-gray-400 mt-1">Tulis dengan detail agar pendonasi merasa dihargai</p>
           </div>
 
           {/* Gambar */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">🖼️ Gambar (Opsional)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Gambar (Opsional)</label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition">
               <input
                 type="file"
@@ -158,7 +156,9 @@ const FormUpdateTransparansi = ({ onClose, aksiId, onSuccess }) => {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <p className="text-3xl">📸</p>
+                    <div className="flex justify-center">
+                      <ImagePlus className="w-10 h-10 text-gray-200" />
+                    </div>
                     <p className="text-gray-700 font-medium">Klik atau drag gambar di sini</p>
                     <p className="text-xs text-gray-400">Max 5MB. Format: JPG, PNG, GIF</p>
                   </div>
@@ -203,7 +203,6 @@ const FormUpdateTransparansi = ({ onClose, aksiId, onSuccess }) => {
                 </>
               ) : (
                 <>
-                  <span>✅</span>
                   <span>Posting Update</span>
                 </>
               )}

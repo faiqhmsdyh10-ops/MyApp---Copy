@@ -8,6 +8,8 @@ const KelolaAksi = () => {
   const [editingId, setEditingId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedAksiId, setSelectedAksiId] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedAksi, setSelectedAksi] = useState(null);
   const [showTransparansiForm, setShowTransparansiForm] = useState(false);
   const [editForm, setEditForm] = useState({
     judul: "",
@@ -31,6 +33,14 @@ const KelolaAksi = () => {
     setAksiList(stored);
   };
 
+  // Helper function untuk warna badge kategori
+  const getBadgeColor = (kategori) => {
+    const normalizedType = kategori.toLowerCase();
+    if (normalizedType.includes('uang')) return 'bg-green-50 text-green-700 border border-green-700';
+    if (normalizedType.includes('barang')) return 'bg-blue-50 text-blue-700 border border-blue-700';
+    if (normalizedType.includes('jasa')) return 'bg-purple-50 text-purple-700 border border-purple-700';
+    return 'bg-gray-100 text-gray-700';
+  };
   const handleEdit = (aksi) => {
     setEditingId(aksi.id);
     
@@ -167,10 +177,6 @@ const KelolaAksi = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Kelola Aksi</h2>
-          <p className="text-gray-600">Kelola semua aksi sosial yang sedang berjalan</p>
-        </div>
         <button
           onClick={() => navigate("/admin/tambah-aksi")}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
@@ -191,40 +197,40 @@ const KelolaAksi = () => {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {aksiList.map((aksi) => (
             <div 
               key={aksi.id} 
-              className={`bg-white rounded-lg shadow-md overflow-hidden cursor-pointer transition ${
-                selectedAksiId === aksi.id 
-                  ? 'ring-2 ring-blue-600 shadow-lg' 
-                  : 'hover:shadow-lg'
-              }`}
-              onClick={() => setSelectedAksiId(selectedAksiId === aksi.id ? null : aksi.id)}
+              className="bg-white rounded-xl border overflow-hidden cursor-pointer transition hover:shadow-lg"
+              onClick={() => {
+                setSelectedAksi(aksi);
+                setShowDetailModal(true);
+              }}
             >
               <div className="p-6">
                 <div className="mb-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg font-bold text-gray-900 flex-1">{aksi.judul}</h3>
-                    <span
-                      className={`px-2 py-1 text-xs rounded-full font-semibold whitespace-nowrap ${
-                        aksi.status === "aktif"
-                          ? "bg-green-100 text-green-700"
-                          : aksi.status === "selesai"
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {aksi.status === "aktif" ? "🟢 Aktif" : aksi.status === "selesai" ? "✅ Selesai" : "⏸️ Ditutup"}
-                    </span>
+                  <div className="flex items-start gap-3 mb-2 h-[10vh]">
+                    <h3 className="text-md font-semibold text-gray-900 flex-1">{aksi.judul}</h3>
                   </div>
-                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">{aksi.deskripsi}</p>
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-1 justify-between">
+                    <div className="flex flex-wrap gap-1">
                     {(aksi.kategori || aksi.tipe?.split(", ") || []).map((kat, idx) => (
-                      <span key={idx} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full">
+                      <span key={idx} className={`px-2 py-1 text-xs rounded-full ${getBadgeColor(kat)}`}>
                         {kat}
                       </span>
                     ))}
+                    </div>
+                    <span
+                      className={`px-2 py-1 text-xs rounded-full font-medium whitespace-nowrap ${
+                        aksi.status === "aktif"
+                          ? "bg-green-50 text-green-600 border border-green-600"
+                          : aksi.status === "selesai"
+                          ? "bg-blue-50 text-blue-600 border border-blue-600"
+                          : "bg-red-50 text-red-600 border border-red-600"
+                      }`}
+                    >
+                      {aksi.status === "aktif" ? "Aktif" : aksi.status === "selesai" ? "Selesai" : "Ditutup"}
+                    </span>
                   </div>
                 </div>
 
@@ -240,7 +246,7 @@ const KelolaAksi = () => {
                 {(aksi.kategori?.includes("Uang") || aksi.tipe?.includes("Uang")) && (
                   <div className="mb-3">
                     <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-600">Dana Terkumpul</span>
+                      <span className="text-gray-600">Terkumpul</span>
                       <span className="font-semibold text-gray-900">
                         {formatRupiah(aksi.donasiTerkumpul)} / {formatRupiah(aksi.targetDonasi)}
                       </span>
@@ -259,51 +265,6 @@ const KelolaAksi = () => {
                   </div>
                 )}
 
-                {/* Show Actions only when card is selected */}
-                {selectedAksiId === aksi.id && (
-                  <div className="space-y-2 mt-4 pt-4 border-t">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEdit(aksi);
-                      }}
-                      className="w-full bg-blue-50 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-100 transition font-medium text-sm"
-                    >
-                      ✏️ Edit Detail
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowTransparansiForm(true);
-                      }}
-                      className="w-full bg-purple-50 text-purple-700 px-3 py-2 rounded-lg hover:bg-purple-100 transition font-medium text-sm"
-                    >
-                      📊 Update Transparansi
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleStatusToggle(aksi);
-                      }}
-                      className={`w-full px-3 py-2 rounded-lg transition font-medium text-sm ${
-                        aksi.status === "aktif"
-                          ? "bg-green-50 text-green-700 hover:bg-green-100"
-                          : "bg-blue-50 text-blue-700 hover:bg-blue-100"
-                      }`}
-                    >
-                      {aksi.status === "aktif" ? "✓ Tandai Selesai" : "↻ Aktifkan Kembali"}
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(aksi.id);
-                      }}
-                      className="w-full px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition font-medium text-sm"
-                    >
-                      🗑️ Hapus
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
           ))}
@@ -315,7 +276,7 @@ const KelolaAksi = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div className="bg-white rounded-lg w-full max-w-3xl my-8">
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-lg">
-              <h3 className="text-2xl font-bold">Edit Aksi</h3>
+              <h3 className="text-2xl text-black font-bold">Edit Aksi</h3>
               <button
                 onClick={() => {
                   setShowModal(false);
@@ -327,7 +288,7 @@ const KelolaAksi = () => {
               </button>
             </div>
             
-            <div className="p-6 max-h-[calc(90vh-140px)] overflow-y-auto">
+            <div className="p-6 max-h-[calc(90vh-140px)] overflow-y-auto hide-scrollbar">
 
               <div className="space-y-6">
                 {/* Judul */}
@@ -337,7 +298,7 @@ const KelolaAksi = () => {
                     type="text"
                     value={editForm.judul}
                     onChange={(e) => setEditForm({ ...editForm, judul: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full text-black bg-white px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -347,7 +308,7 @@ const KelolaAksi = () => {
                   <textarea
                     value={editForm.deskripsi}
                     onChange={(e) => setEditForm({ ...editForm, deskripsi: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full text-black bg-white px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     rows="4"
                   />
                 </div>
@@ -382,7 +343,7 @@ const KelolaAksi = () => {
                           const value = e.target.value.replace(/\D/g, "");
                           setEditForm({ ...editForm, targetDonasi: value });
                         }}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full text-black bg-white px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                     <div>
@@ -390,11 +351,8 @@ const KelolaAksi = () => {
                       <input
                         type="text"
                         value={editForm.donasiTerkumpul}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, "");
-                          setEditForm({ ...editForm, donasiTerkumpul: value });
-                        }}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        disabled
+                        className="w-full text-gray-500 bg-gray-100 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                   </div>
@@ -411,7 +369,7 @@ const KelolaAksi = () => {
                       value={barangInput}
                       onChange={(e) => setBarangInput(e.target.value)}
                       onKeyDown={handleAddBarang}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full text-black bg-white px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Ketik nama barang dan tekan Enter"
                     />
                     <p className="mt-1 text-xs text-gray-500">Tekan Enter untuk menambahkan barang</p>
@@ -447,7 +405,7 @@ const KelolaAksi = () => {
                       value={jasaInput}
                       onChange={(e) => setJasaInput(e.target.value)}
                       onKeyDown={handleAddJasa}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full text-black bg-white px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Ketik jasa yang dibutuhkan dan tekan Enter"
                     />
                     <p className="mt-1 text-xs text-gray-500">Tekan Enter untuk menambahkan jasa</p>
@@ -478,7 +436,7 @@ const KelolaAksi = () => {
                   <select
                     value={editForm.status}
                     onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full cursor-pointer text-black bg-white px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="aktif">Aktif</option>
                     <option value="selesai">Selesai</option>
@@ -488,10 +446,10 @@ const KelolaAksi = () => {
               </div>
 
               {/* Modal Actions */}
-              <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex space-x-3 rounded-b-lg">
+              <div className=" bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex space-x-3 rounded-b-lg">
                 <button
                   onClick={handleSave}
-                  className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-medium"
+                  className="flex-1 bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition font-medium"
                 >
                   Simpan Perubahan
                 </button>
@@ -500,7 +458,7 @@ const KelolaAksi = () => {
                     setShowModal(false);
                     setEditingId(null);
                   }}
-                  className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium"
+                  className="px-6 text-black py-3 border border-gray-300 rounded-xl hover:bg-gray-50 transition font-medium"
                 >
                   Batal
                 </button>
@@ -523,6 +481,174 @@ const KelolaAksi = () => {
             setSelectedAksiId(null);
           }}
         />
+      )}
+
+      {/* Detail Modal */}
+      {showDetailModal && selectedAksi && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto hide-scrollbar">
+            {/* Header */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+              <h3 className="text-2xl font-bold text-gray-900">Detail Aksi</h3>
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-6">
+              {/* Judul */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-500 mb-2">Judul</h4>
+                <p className="text-lg font-semibold text-gray-900">{selectedAksi.judul}</p>
+              </div>
+
+              {/* Deskripsi */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-500 mb-2">Deskripsi</h4>
+                <p className="text-gray-700 max-h-[10vh] whitespace-pre-wrap line-clamp-3">{selectedAksi.deskripsi}</p>
+              </div>
+
+              {/* Kategori & Status */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500 mb-2">Kategori</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {(selectedAksi.kategori || selectedAksi.tipe?.split(", ") || []).map((kat, idx) => (
+                      <span key={idx} className={`px-3 py-1 rounded-full text-sm ${getBadgeColor(kat)}`}>
+                        {kat}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500 mb-2">Status</h4>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    selectedAksi.status === "aktif"
+                      ? "bg-green-100 text-green-700"
+                      : selectedAksi.status === "selesai"
+                      ? "bg-blue-100 text-blue-700"
+                      : "bg-red-100 text-red-700"
+                  }`}>
+                    {selectedAksi.status === "aktif" ? "Aktif" : selectedAksi.status === "selesai" ? "Selesai" : "Ditutup"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Gambar */}
+              {selectedAksi.image && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500 mb-2">Gambar</h4>
+                  <img src={selectedAksi.image} alt={selectedAksi.judul} className="w-full h-64 object-cover rounded-lg" />
+                </div>
+              )}
+
+              {/* Donasi Info */}
+              {(selectedAksi.kategori?.includes("Uang") || selectedAksi.tipe?.includes("Uang")) && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500 mb-2">Donasi</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Target:</span>
+                      <span className="font-semibold text-blue-600">{formatRupiah(selectedAksi.targetDonasi)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Terkumpul:</span>
+                      <span className="font-semibold text-gray-500">{formatRupiah(selectedAksi.donasiTerkumpul)}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full"
+                        style={{
+                          width: `${Math.min(
+                            ((selectedAksi.donasiTerkumpul || 0) / (selectedAksi.targetDonasi || 1)) * 100,
+                            100
+                          )}%`,
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Barang */}
+              {(selectedAksi.kategori?.includes("Barang") || selectedAksi.tipe?.includes("Barang")) && selectedAksi.barangDibutuhkan?.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500 mb-2">Barang Dibutuhkan</h4>
+                  <ul className="flex flex-wrap gap-2 text-sm text-gray-700">
+                    {(typeof selectedAksi.barangDibutuhkan === 'string' 
+                      ? selectedAksi.barangDibutuhkan.split(", ") 
+                      : selectedAksi.barangDibutuhkan).map((barang, idx) => (
+                      <li key={idx} className="border border-gray-400 rounded-full py-1.5 px-4">{barang}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Jasa */}
+              {(selectedAksi.kategori?.includes("Jasa") || selectedAksi.tipe?.includes("Jasa")) && selectedAksi.jasaDibutuhkan?.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500 mb-2">Jasa Dibutuhkan</h4>
+                  <ul className="flex flex-wrap gap-2 text-sm text-gray-700">
+                    {(typeof selectedAksi.jasaDibutuhkan === 'string' 
+                      ? selectedAksi.jasaDibutuhkan.split(", ") 
+                      : selectedAksi.jasaDibutuhkan).map((jasa, idx) => (
+                      <li key={idx} className="border border-gray-400 rounded-full py-1.5 px-4">{jasa}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 grid grid-cols-4 gap-3 rounded-b-2xl">
+              <button
+                onClick={() => {
+                  setShowDetailModal(false);
+                  handleEdit(selectedAksi);
+                }}
+                className="bg-blue-50 text-blue-700 border border-blue-700 px-4 py-2 rounded-full hover:bg-blue-100 transition font-medium text-sm"
+              >
+                Edit Detail
+              </button>
+              <button
+                onClick={() => {
+                  setShowDetailModal(false);
+                  setSelectedAksiId(selectedAksi.id);
+                  setShowTransparansiForm(true);
+                }}
+                className="bg-purple-50 text-purple-700 border border-purple-700 px-4 py-2 rounded-full hover:bg-purple-100 transition font-medium text-sm"
+              >
+                Transparansi
+              </button>
+              <button
+                onClick={() => {
+                  setShowDetailModal(false);
+                  handleStatusToggle(selectedAksi);
+                }}
+                className={`px-4 py-2 rounded-full transition font-medium text-sm ${
+                  selectedAksi.status === "aktif"
+                    ? "bg-green-50 text-green-700 border border-green-700 hover:bg-green-100"
+                    : "bg-blue-50 text-blue-700 border border-blue-700 hover:bg-blue-100"
+                }`}
+              >
+                {selectedAksi.status === "aktif" ? "Selesaikan" : "Aktifkan"}
+              </button>
+              <button
+                onClick={() => {
+                  setShowDetailModal(false);
+                  handleDelete(selectedAksi.id);
+                }}
+                className="bg-red-50 text-red-700 border border-red-700 px-4 py-2 rounded-full hover:bg-red-100 transition font-medium text-sm"
+              >
+                Hapus
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
