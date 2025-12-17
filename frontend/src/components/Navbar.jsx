@@ -67,6 +67,7 @@ const Navbar = () => {
   const navItems = [
     { label: "Beranda", path: "/" },
     { label: "Aksi Berjalan", path: "/aksi-berjalan" },
+    { label: "Galang Dana", path: "/galang-dana" },
     { label: "Relawan", path: "/relawan" },
     { label: "Tentang Kami", path: "/tentang-kami" },
   ];

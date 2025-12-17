@@ -149,6 +149,7 @@ const RegisterForm = ({ onRegisterSuccess, onSwitchToLogin }) => {
       // Save to localStorage
       localStorage.setItem("isLoggedIn", "true");
       localStorage.setItem("userToken", response.token || "dummy-token");
+      localStorage.setItem("userEmail", formData.email);
 
       const profileKey = `userProfile_${formData.email}`;
       const userData = {

@@ -50,6 +50,7 @@ const LoginForm = ({ onLogin, onSwitchToRegister }) => {
       localStorage.setItem("userToken", response.token || "dummy-token");
       
       const userEmail = response.user?.email || email;
+      localStorage.setItem("userEmail", userEmail);
       const profileKey = `userProfile_${userEmail}`;
       
       // Check if user has existing profile data

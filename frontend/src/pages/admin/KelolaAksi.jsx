@@ -4,13 +4,17 @@ import FormUpdateTransparansi from "../../components/FormUpdateTransparansi";
 
 const KelolaAksi = () => {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("aksi-berjalan");
   const [aksiList, setAksiList] = useState([]);
+  const [pengajuanAksiList, setPengajuanAksiList] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedAksiId, setSelectedAksiId] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedAksi, setSelectedAksi] = useState(null);
   const [showTransparansiForm, setShowTransparansiForm] = useState(false);
+  const [selectedPengajuan, setSelectedPengajuan] = useState(null);
+  const [showPengajuanDetailModal, setShowPengajuanDetailModal] = useState(false);
   const [editForm, setEditForm] = useState({
     judul: "",
     deskripsi: "",
@@ -26,11 +30,19 @@ const KelolaAksi = () => {
 
   useEffect(() => {
     loadAksi();
+    loadPengajuanAksi();
   }, []);
 
   const loadAksi = () => {
     const stored = JSON.parse(localStorage.getItem("aksiList") || "[]");
     setAksiList(stored);
+  };
+
+  const loadPengajuanAksi = () => {
+    const stored = JSON.parse(localStorage.getItem("pengajuanAksiList") || "[]");
+    // Filter hanya yang pending approval
+    const pending = stored.filter(p => p.status === "pending_approval");
+    setPengajuanAksiList(pending);
   };
 
   // Helper function untuk warna badge kategori
@@ -166,6 +178,51 @@ const KelolaAksi = () => {
     localStorage.setItem("aksiList", JSON.stringify(updated));
   };
 
+  const handleApprovePengajuan = (pengajuan) => {
+    if (!window.confirm("Setujui pengajuan aksi ini?")) return;
+
+    // Ubah status pengajuan menjadi approved
+    const allPengajuan = JSON.parse(localStorage.getItem("pengajuanAksiList") || "[]");
+    const updatedAllPengajuan = allPengajuan.map(p => 
+      p.id === pengajuan.id 
+        ? { ...p, status: "approved", approvalDate: new Date().toISOString() }
+        : p
+    );
+    localStorage.setItem("pengajuanAksiList", JSON.stringify(updatedAllPengajuan));
+
+    // Tambahkan ke aksiList sebagai aksi aktif
+    const aksiToAdd = {
+      ...pengajuan,
+      status: "aktif",
+      createdAt: new Date().toISOString(),
+    };
+    const allAksi = JSON.parse(localStorage.getItem("aksiList") || "[]");
+    allAksi.push(aksiToAdd);
+    localStorage.setItem("aksiList", JSON.stringify(allAksi));
+
+    setAksiList(allAksi);
+    loadPengajuanAksi(); // Reload pengajuan list
+    setShowPengajuanDetailModal(false);
+    alert("✅ Pengajuan aksi berhasil disetujui! Aksi telah ditambahkan ke daftar aksi berjalan.");
+  };
+
+  const handleRejectPengajuan = (pengajuan) => {
+    if (!window.confirm("Tolak pengajuan aksi ini?")) return;
+
+    // Ubah status pengajuan menjadi rejected
+    const allPengajuan = JSON.parse(localStorage.getItem("pengajuanAksiList") || "[]");
+    const updatedAllPengajuan = allPengajuan.map(p => 
+      p.id === pengajuan.id 
+        ? { ...p, status: "rejected", rejectionDate: new Date().toISOString() }
+        : p
+    );
+    localStorage.setItem("pengajuanAksiList", JSON.stringify(updatedAllPengajuan));
+
+    loadPengajuanAksi(); // Reload pengajuan list
+    setShowPengajuanDetailModal(false);
+    alert("❌ Pengajuan aksi telah ditolak.");
+  };
+
   const formatRupiah = (number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -176,14 +233,41 @@ const KelolaAksi = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Tabs */}
+      <div className="flex gap-4 border-b border-gray-200">
         <button
-          onClick={() => navigate("/admin/tambah-aksi")}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          onClick={() => setActiveTab("aksi-berjalan")}
+          className={`pb-3 font-semibold transition ${
+            activeTab === "aksi-berjalan"
+              ? "border-b-2 border-blue-600 text-blue-600"
+              : "text-gray-600 hover:text-gray-900"
+          }`}
         >
-          + Tambah Aksi
+          Aksi Berjalan
+        </button>
+        <button
+          onClick={() => setActiveTab("permintaan-persetujuan")}
+          className={`pb-3 font-semibold transition ${
+            activeTab === "permintaan-persetujuan"
+              ? "border-b-2 border-blue-600 text-blue-600"
+              : "text-gray-600 hover:text-gray-900"
+          }`}
+        >
+          Permintaan Persetujuan ({pengajuanAksiList.length})
         </button>
       </div>
+
+      {/* TAB 1: AKSI BERJALAN */}
+      {activeTab === "aksi-berjalan" && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => navigate("/admin/tambah-aksi")}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+            >
+              + Tambah Aksi
+            </button>
+          </div>
 
       {/* Aksi List */}
       {aksiList.length === 0 ? (
@@ -646,6 +730,180 @@ const KelolaAksi = () => {
               >
                 Hapus
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+        </div>
+      )}
+
+      {/* TAB 2: PERMINTAAN PERSETUJUAN */}
+      {activeTab === "permintaan-persetujuan" && (
+        <div className="space-y-6">
+          {pengajuanAksiList.length === 0 ? (
+            <div className="bg-white rounded-lg shadow-md p-12 text-center">
+              <p className="text-gray-500">Tidak ada permintaan persetujuan aksi saat ini.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {pengajuanAksiList.map((pengajuan) => (
+                <div 
+                  key={pengajuan.id} 
+                  className="bg-white rounded-xl border overflow-hidden cursor-pointer transition hover:shadow-lg"
+                  onClick={() => {
+                    setSelectedPengajuan(pengajuan);
+                    setShowPengajuanDetailModal(true);
+                  }}
+                >
+                  <div className="p-6">
+                    <div className="mb-4">
+                      <div className="flex items-start gap-3 mb-2 h-[10vh]">
+                        <h3 className="text-md font-semibold text-gray-900 flex-1">{pengajuan.judul}</h3>
+                      </div>
+                      <div className="flex flex-wrap gap-1 justify-between">
+                        <div className="flex flex-wrap gap-1">
+                          {(pengajuan.kategori || pengajuan.tipe?.split(", ") || []).map((kat, idx) => (
+                            <span key={idx} className={`px-2 py-1 text-xs rounded-full ${getBadgeColor(kat)}`}>
+                              {kat}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mb-3 text-sm text-gray-600">
+                      <p><strong>Pengusul:</strong> {pengajuan.createdBy}</p>
+                      <p><strong>Email:</strong> {pengajuan.createdByEmail}</p>
+                    </div>
+
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">{pengajuan.deskripsi}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* MODAL: Detail Pengajuan Aksi */}
+      {showPengajuanDetailModal && selectedPengajuan && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-2xl w-full my-8">
+            <div className="sticky top-0 bg-white border-b flex items-center justify-between p-6">
+              <h3 className="text-lg font-bold text-gray-900">Detail Pengajuan Aksi</h3>
+              <button
+                onClick={() => setShowPengajuanDetailModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6 max-h-[calc(90vh-140px)] overflow-y-auto">
+              {/* Pengusul Info */}
+              <div className="bg-blue-50 rounded-lg p-4 space-y-2">
+                <h4 className="font-semibold text-gray-900">Informasi Pengusul</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-600">Nama</p>
+                    <p className="font-medium text-gray-900">{selectedPengajuan.createdBy}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Email</p>
+                    <p className="font-medium text-gray-900">{selectedPengajuan.createdByEmail}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-gray-600">Nomor HP</p>
+                    <p className="font-medium text-gray-900">{selectedPengajuan.createdByPhone}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Aksi Info */}
+              <div className="space-y-3">
+                <h4 className="font-semibold text-gray-900">Detail Aksi</h4>
+                <div>
+                  <p className="text-sm text-gray-600">Judul</p>
+                  <p className="font-medium text-gray-900">{selectedPengajuan.judul}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Deskripsi</p>
+                  <p className="text-gray-700">{selectedPengajuan.deskripsi}</p>
+                </div>
+              </div>
+
+              {/* Kategori */}
+              <div>
+                <p className="text-sm text-gray-600 mb-2">Kategori</p>
+                <div className="flex flex-wrap gap-2">
+                  {(selectedPengajuan.kategori || []).map((kat) => (
+                    <span
+                      key={kat}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${getBadgeColor(kat)}`}
+                    >
+                      {kat}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Target Donasi */}
+              {selectedPengajuan.kategori?.includes("Uang") && (
+                <div>
+                  <p className="text-sm text-gray-600">Target Donasi</p>
+                  <p className="font-medium text-gray-900">{formatRupiah(selectedPengajuan.targetDonasi)}</p>
+                </div>
+              )}
+
+              {/* Barang */}
+              {selectedPengajuan.kategori?.includes("Barang") && selectedPengajuan.barangDibutuhkan && (
+                <div>
+                  <p className="text-sm text-gray-600 mb-2">Barang Dibutuhkan</p>
+                  <p className="text-gray-700">{selectedPengajuan.barangDibutuhkan}</p>
+                </div>
+              )}
+
+              {/* Jasa */}
+              {selectedPengajuan.kategori?.includes("Jasa") && selectedPengajuan.jasaDibutuhkan && (
+                <div>
+                  <p className="text-sm text-gray-600 mb-2">Jasa Dibutuhkan</p>
+                  <p className="text-gray-700">{selectedPengajuan.jasaDibutuhkan}</p>
+                </div>
+              )}
+
+              {/* Gambar */}
+              {selectedPengajuan.image && (
+                <div>
+                  <p className="text-sm text-gray-600 mb-2">Gambar Aksi</p>
+                  <img
+                    src={selectedPengajuan.image}
+                    alt={selectedPengajuan.judul}
+                    className="w-full h-48 object-cover rounded-lg"
+                  />
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => {
+                    setShowPengajuanDetailModal(false);
+                    handleRejectPengajuan(selectedPengajuan);
+                  }}
+                  className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition font-medium"
+                >
+                  Tolak Pengajuan
+                </button>
+                <button
+                  onClick={() => {
+                    setShowPengajuanDetailModal(false);
+                    handleApprovePengajuan(selectedPengajuan);
+                  }}
+                  className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition font-medium"
+                >
+                  Setujui Pengajuan
+                </button>
+              </div>
             </div>
           </div>
         </div>

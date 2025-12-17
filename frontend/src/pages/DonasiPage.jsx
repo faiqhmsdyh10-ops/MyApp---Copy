@@ -35,6 +35,8 @@ const DonasiPage = () => {
   useEffect(() => {
     // Check if user is logged in
     const isLoggedIn = localStorage.getItem("userToken") || localStorage.getItem("isLoggedIn");
+    const userEmail = localStorage.getItem("userEmail");
+    
     if (!isLoggedIn) {
       navigate(`/aksi/${id}`);
       return;
@@ -45,6 +47,13 @@ const DonasiPage = () => {
     const aksiData = localAksi.find((a) => a.id === parseInt(id));
     
     if (aksiData) {
+      // Cek apakah ini aksi milik user sendiri
+      if (aksiData.createdByEmail === userEmail) {
+        alert("Anda tidak dapat berdonasi untuk aksi yang Anda buat sendiri.");
+        navigate(`/aksi/${id}`);
+        return;
+      }
+      
       // Cek status aksi
       if (aksiData.status === "ditutup") {
         alert("Maaf, donasi untuk aksi ini sudah ditutup.");

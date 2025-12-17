@@ -100,10 +100,6 @@ const LaporanAksi = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Laporan Aksi</h2>
-          <p className="text-gray-600">Laporan lengkap aksi sosial berdasarkan periode waktu</p>
-        </div>
         <button
           onClick={exportData}
           className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
@@ -112,15 +108,16 @@ const LaporanAksi = () => {
         </button>
       </div>
 
-      {/* Filter */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-white rounded-xl border p-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Periode Waktu
         </label>
         <select
           value={filterPeriode}
           onChange={(e) => handlePeriodeChange(e.target.value)}
-          className="w-full max-w-xs px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full text-black bg-white max-w-xs px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="7">7 Hari Terakhir</option>
           <option value="30">30 Hari Terakhir</option>
@@ -130,14 +127,14 @@ const LaporanAksi = () => {
         </select>
 
         {showCustom && (
-          <div className="flex gap-4 mt-4">
+          <div className="flex flex-col gap-4 mt-4">
             <div>
               <label className="block text-sm text-gray-600 mb-1">Tanggal Mulai</label>
               <input
                 type="date"
                 value={customRange.start}
                 onChange={(e) => setCustomRange({ ...customRange, start: e.target.value })}
-                className="px-4 py-2 border border-gray-300 rounded-lg"
+                className="px-4 py-2 text-black bg-white border border-gray-300 rounded-lg"
               />
             </div>
             <div>
@@ -146,35 +143,28 @@ const LaporanAksi = () => {
                 type="date"
                 value={customRange.end}
                 onChange={(e) => setCustomRange({ ...customRange, end: e.target.value })}
-                className="px-4 py-2 border border-gray-300 rounded-lg"
+                className="px-4 py-2 text-black bg-white border border-gray-300 rounded-lg"
               />
             </div>
           </div>
         )}
       </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg p-6 shadow-lg">
+        <div className="bg-gradient-to-br max-h-[17.5vh] from-blue-500 to-blue-600 text-white rounded-xl p-6">
           <h3 className="text-sm font-medium mb-2">Total Dana Terkumpul</h3>
-          <p className="text-3xl font-bold">{formatRupiah(summary.totalDana)}</p>
+          <p className="text-xl font-bold">{formatRupiah(summary.totalDana)}</p>
         </div>
-        <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg p-6 shadow-lg">
-          <h3 className="text-sm font-medium mb-2">Aksi Barang</h3>
-          <p className="text-3xl font-bold">{summary.totalBarang}</p>
-        </div>
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-lg p-6 shadow-lg">
+        <div className="bg-gradient-to-br max-h-[17.5vh] from-purple-500 to-purple-600 text-white rounded-xl p-6">
           <h3 className="text-sm font-medium mb-2">Aksi Selesai</h3>
-          <p className="text-3xl font-bold">{summary.aksiSelesai}</p>
+          <p className="text-xl font-bold">{summary.aksiSelesai}</p>
         </div>
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-lg p-6 shadow-lg">
+        <div className="bg-gradient-to-br max-h-[17.5vh] from-orange-500 to-orange-600 text-white rounded-xl p-6">
           <h3 className="text-sm font-medium mb-2">Total Aksi</h3>
-          <p className="text-3xl font-bold">{summary.totalAksi}</p>
+          <p className="text-xl font-bold">{summary.totalAksi}</p>
         </div>
       </div>
 
       {/* Detail Table */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="bg-white rounded-xl border overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -230,12 +220,12 @@ const LaporanAksi = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        className={`px-4 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           aksi.status === "aktif"
-                            ? "bg-green-100 text-green-800"
+                            ? "bg-green-100 border border-green-600 text-green-800"
                             : aksi.status === "selesai"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-gray-100 text-gray-800"
+                            ? "bg-blue-100 border border-blue-600 text-blue-800"
+                            : "bg-gray-100 border border-gray-600  text-gray-800"
                         }`}
                       >
                         {aksi.status}

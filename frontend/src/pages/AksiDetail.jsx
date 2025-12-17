@@ -16,6 +16,7 @@ const AksiDetail = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showTransparansi, setShowTransparansi] = useState(false);
+  const [isOwnAksi, setIsOwnAksi] = useState(false);
 
   const handleDonateClick = () => {
     // Check if user is logged in
@@ -23,6 +24,12 @@ const AksiDetail = () => {
     
     if (!isLoggedIn) {
       setShowLoginModal(true);
+      return;
+    }
+
+    // Check if this is user's own aksi
+    if (isOwnAksi) {
+      alert("Anda tidak dapat berdonasi untuk aksi yang Anda buat sendiri.");
       return;
     }
 
@@ -49,6 +56,9 @@ const AksiDetail = () => {
       try {
         setLoading(true);
 
+        // Get user email for ownership check
+        const userEmail = localStorage.getItem("userEmail");
+
         // Get from localStorage first
         const localAksi = JSON.parse(localStorage.getItem("aksiList") || "[]");
         const aksiFromLocal = localAksi.find((d) => d.id === parseInt(id));
@@ -67,6 +77,11 @@ const AksiDetail = () => {
 
         if (aksiData) {
           setAksi(aksiData);
+          
+          // Check if this is user's own aksi
+          if (userEmail && aksiData.createdByEmail === userEmail) {
+            setIsOwnAksi(true);
+          }
 
           // Ambil donatur terbaru dari localStorage
           const donations = JSON.parse(localStorage.getItem("donations") || "[]");
@@ -275,6 +290,14 @@ const AksiDetail = () => {
                       className="w-full bg-red-600 text-white py-2 rounded-full font-medium cursor-not-allowed opacity-90"
                     >
                       Donasi Ditutup
+                    </button>
+                  ) : isOwnAksi ? (
+                    <button 
+                      disabled
+                      className="w-full bg-gray-400 text-white py-2 rounded-full font-medium cursor-not-allowed"
+                      title="Anda tidak dapat berdonasi untuk aksi sendiri"
+                    >
+                      Aksi Milik Anda
                     </button>
                   ) : (
                     <button 

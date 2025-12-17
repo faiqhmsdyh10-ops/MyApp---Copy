@@ -6,10 +6,12 @@ import Home from "./pages/Home";
 import AksiBerjalan from "./pages/AksiBerjalan";
 import AksiDetail from "./pages/AksiDetail";
 import DonasiPage from "./pages/DonasiPage";
+import GalangDana from "./pages/GalangDana";
 import Relawan from "./pages/Relawan";
 import TentangKami from "./pages/TentangKami";
 import ProfilSaya from "./pages/ProfilSaya";
 import DonasiSaya from "./pages/DonasiSaya";
+import DonasiBaru from "./pages/DonasiBaru";
 import Layout from "./components/Layout";
 
 // Admin Pages
@@ -38,10 +40,11 @@ const App = () => {
         <Route path="/aksi-berjalan" element={<AksiBerjalan />} />
         <Route path="/aksi/:id" element={<AksiDetail />} />
         <Route path="/donasi/:id" element={<DonasiPage />} />
+        <Route path="/galang-dana" element={<GalangDana />} />
         <Route path="/relawan" element={<Relawan />} />
         <Route path="/tentang-kami" element={<TentangKami />} />
         <Route path="/profil" element={<ProfilSaya />} />
-        <Route path="/donasi-saya" element={<DonasiSaya />} />
+        <Route path="/donasi-saya" element={<DonasiBaru />} />
         <Route
           path="/login"
           element={<LoginForm onLogin={handleLogin} onSwitchToRegister={() => navigate('/register')} />}
