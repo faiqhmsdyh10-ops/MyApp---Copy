@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import { createNotification } from "../utils/notificationHelper";
 
 const DonasiPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const formRef = useRef(null);
   const [aksi, setAksi] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [donationType, setDonationType] = useState("");
@@ -96,6 +98,13 @@ const DonasiPage = () => {
       setTimeRemaining(300); // Reset ke 5 menit
     }
   }, [currentStep, donationType]);
+
+  // Scroll to form when step changes
+  useEffect(() => {
+    if (formRef.current && currentStep > 1) {
+      formRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [currentStep]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -297,8 +306,42 @@ const DonasiPage = () => {
       }
     }
 
+    // Create notification for successful donation
+    const userEmail = localStorage.getItem("userEmail");
+    if (userEmail) {
+      if (donationType === "Uang") {
+        const formatRupiah = (number) => {
+          return new Intl.NumberFormat("id-ID", {
+            style: "currency",
+            currency: "IDR",
+            minimumFractionDigits: 0,
+          }).format(number || 0);
+        };
+        createNotification(
+          userEmail,
+          "donation_success",
+          "Donasi Berhasil",
+          `Donasi uang sebesar ${formatRupiah(formData.jumlahDonasi)} untuk aksi "${aksi.judul}" berhasil dicatat. Terima kasih atas kebaikan Anda!`
+        );
+      } else if (donationType === "Barang") {
+        createNotification(
+          userEmail,
+          "donation_success",
+          "Donasi Barang Berhasil",
+          `Donasi barang (${formData.selectedBarang.join(", ")}) untuk aksi "${aksi.judul}" berhasil dicatat. Terima kasih atas kebaikan Anda!`
+        );
+      } else if (donationType === "Jasa") {
+        createNotification(
+          userEmail,
+          "pengajuan_jasa",
+          "Pengajuan Relawan Terkirim",
+          `Pengajuan relawan Anda untuk aksi "${aksi.judul}" telah dikirim dan sedang menunggu persetujuan admin.`
+        );
+      }
+    }
+
     alert("Terima kasih! Donasi Anda berhasil dicatat.");
-    navigate("/");
+    navigate(`/aksi/${id}`);
   };
 
   if (!aksi) {
@@ -349,7 +392,7 @@ const DonasiPage = () => {
           </div>
         
         {/* Form Content */}
-        <div className="max-w-4xl bg-white mx-auto px-6 pb-12 border rounded-3xl">
+        <div ref={formRef} className="max-w-4xl bg-white mx-auto px-6 pb-12 border rounded-3xl">
           <div className="bg-white rounded-lg p-8">
                                 <button
                       onClick={() => navigate(`/aksi/${id}`)}

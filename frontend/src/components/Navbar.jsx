@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import NotificationBell from "./NotificationBell";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -108,11 +109,16 @@ const Navbar = () => {
         {/* Right side (login button or user menu) */}
         <div className="hidden md:flex items-center font-inter">
           {isLoggedIn && userData ? (
-            <div className="relative">
-              <button
-                onClick={() => setShowDropdown(!showDropdown)}
-                className={`flex items-center text-sm space-x-2 ${isScrolled ? "bg-blue-50 text-blue-700" : "bg-white/20 text-white"} px-4 py-2 rounded-full hover:bg-white hover:text-black transition`}
-              >
+            <div className="flex items-center gap-2">
+              {/* Notification Bell */}
+              <NotificationBell isScrolled={isScrolled} />
+              
+              {/* Profile Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className={`flex items-center text-sm space-x-2 ${isScrolled ? "bg-blue-50 text-blue-700" : "bg-white/20 text-white"} px-4 py-2 rounded-full hover:bg-white hover:text-black transition`}
+                >
                 {userData.profilePhoto ? (
                   <img
                     src={userData.profilePhoto}
@@ -163,10 +169,11 @@ const Navbar = () => {
                     onClick={handleLogout}
                     className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition"
                   >
-                    🚪 Keluar
+                  🚪 Keluar
                   </button>
                 </div>
               )}
+              </div>
             </div>
           ) : (
             <button

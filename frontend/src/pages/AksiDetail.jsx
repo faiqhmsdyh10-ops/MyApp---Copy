@@ -4,7 +4,7 @@ import Navbar from "../components/Navbar";
 import { getDonations } from "../api";
 import ShareModal from "../components/ShareModal";
 import TransparansiDonasi from "../components/TransparansiDonasi";
-import { Share2 } from "lucide-react";
+import { Share2, ArrowLeft } from "lucide-react";
 
 const AksiDetail = () => {
   const { id } = useParams();
@@ -140,6 +140,15 @@ const AksiDetail = () => {
 
         {/* Main Content */}
         <div className="max-w-6xl mx-auto px-6 py-12">
+          {/* Tombol Kembali */}
+          <button
+            onClick={() => navigate("/aksi-berjalan#list-aksi")}
+            className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition mb-6 group"
+          >
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">Kembali</span>
+          </button>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column (3/4) - Content */}
             <div className="lg:col-span-2">

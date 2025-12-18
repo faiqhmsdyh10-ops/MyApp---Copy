@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createNotification } from "../../utils/notificationHelper";
 
 const KelolaRelawan = () => {
   const [activeTab, setActiveTab] = useState("relawan");
@@ -74,6 +75,16 @@ const KelolaRelawan = () => {
     localStorage.setItem("relawanList", JSON.stringify(updatedRelawanList));
     setRelawanList(updatedRelawanList);
 
+    // Create notification for user
+    if (pengajuan.email) {
+      createNotification(
+        pengajuan.email,
+        "jasa_approved",
+        "Pengajuan Jasa/Relawan Diterima",
+        `Selamat! Pengajuan jasa/relawan Anda telah diterima. Anda sekarang terdaftar sebagai relawan aktif.`
+      );
+    }
+
     console.log(`✅ Pengajuan jasa diterima dan relawan baru ditambahkan:`, newRelawan);
     alert(`Pengajuan diterima! Data relawan telah ditambahkan.\nEmail notifikasi dikirim ke ${pengajuan.email}`);
   };
@@ -89,6 +100,16 @@ const KelolaRelawan = () => {
     const updatedList = pengajuanJasaList.filter(p => p.id !== id);
     localStorage.setItem("pengajuanJasaList", JSON.stringify(updatedList));
     setPengajuanJasaList(updatedList);
+
+    // Create notification for user
+    if (pengajuan.email) {
+      createNotification(
+        pengajuan.email,
+        "jasa_rejected",
+        "Pengajuan Jasa/Relawan Ditolak",
+        `Mohon maaf, pengajuan jasa/relawan Anda telah ditolak.${reason ? ` Alasan: ${reason}` : ""}`
+      );
+    }
 
     console.log(`✅ Pengajuan jasa ditolak. Email dikirim ke ${pengajuan.email}: Pengajuan jasa Anda telah DITOLAK. Alasan: ${reason}`);
     alert(`Pengajuan ditolak! Email notifikasi dikirim ke ${pengajuan.email}`);

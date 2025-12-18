@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { getDonations } from "../api";
 
 const AksiBerjalan = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [donations, setDonations] = useState([]);
   const [filteredDonations, setFilteredDonations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +15,21 @@ const AksiBerjalan = () => {
   const [sortBy, setSortBy] = useState("Terbaru");
   const [showKategoriDropdown, setShowKategoriDropdown] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
-  
+
+  // Scroll to list-aksi section if hash is present
+  useEffect(() => {
+    if (location.hash === "#list-aksi") {
+      // Wait for content to load, then scroll
+      const scrollToList = () => {
+        const element = document.getElementById("list-aksi");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      };
+      // Small delay to ensure DOM is ready
+      setTimeout(scrollToList, 100);
+    }
+  }, [location.hash, loading]);
 
   useEffect(() => {
     const fetchDonations = async () => {
@@ -249,7 +264,7 @@ const AksiBerjalan = () => {
       </section>
 
       {/* Content Section */}
-      <section className="py-10">
+      <section id="list-aksi" className="py-10">
         <div className="max-w-7xl mx-auto px-6">
           {loading && <p className="text-center text-gray-500">Memuat aksi berjalan...</p>}
           {error && <p className="text-center text-red-500">{error}</p>}

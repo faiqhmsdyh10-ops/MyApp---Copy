@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { X } from "lucide-react";
+import { createNotification } from "../utils/notificationHelper";
 
 const GalangDana = () => {
   const navigate = useNavigate();
+  const formRef = useRef(null);
   const [currentStep, setCurrentStep] = useState(1);
 
   const [formData, setFormData] = useState({
@@ -38,9 +40,11 @@ const GalangDana = () => {
     setFormData(prev => ({ ...prev, email }));
   }, [navigate]);
 
-  // Scroll to top when step changes
+  // Scroll to form when step changes
   useEffect(() => {
-    window.scrollTo(0, 0);
+    if (formRef.current && currentStep > 1) {
+      formRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   }, [currentStep]);
 
   const handleInputChange = (e) => {
@@ -227,6 +231,17 @@ const GalangDana = () => {
       pengajuanList.push(newAksi);
       localStorage.setItem("pengajuanAksiList", JSON.stringify(pengajuanList));
 
+      // Create notification for galang dana submission
+      const userEmail = localStorage.getItem("userEmail");
+      if (userEmail) {
+        createNotification(
+          userEmail,
+          "pengajuan_aksi",
+          "Pengajuan Galang Dana Terkirim",
+          `Pengajuan galang dana "${formData.judul}" telah dikirim dan sedang menunggu persetujuan admin.`
+        );
+      }
+
       alert("✅ Aksi Anda telah dikirimkan ke admin untuk ditinjau. Terima kasih!");
       navigate("/donasi-saya");
     } catch (error) {
@@ -268,7 +283,7 @@ const GalangDana = () => {
           </div>
         
           {/* Form Content */}
-          <div className="max-w-4xl bg-white mx-auto px-6 pb-12 border rounded-3xl">
+          <div ref={formRef} className="max-w-4xl bg-white mx-auto px-6 pb-12 border rounded-3xl">
             <div className="bg-white rounded-lg p-8">
               {/* Progress Steps - Custom Modern Stepper */}
               <div className="bg-white py-8">
