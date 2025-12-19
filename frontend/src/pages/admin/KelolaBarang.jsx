@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { X, Download } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { X, Download, Search } from "lucide-react";
 
 const KelolaBarang = () => {
   const [barangList, setBarangList] = useState([]);
   const [filterStatus, setFilterStatus] = useState("semua");
+  const [searchQuery, setSearchQuery] = useState("");
   const [showModalTerima, setShowModalTerima] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedBarang, setSelectedBarang] = useState(null);
@@ -107,47 +108,78 @@ const KelolaBarang = () => {
     setShowDetailModal(true);
   };
 
-  const getFilteredBarang = () => {
-    if (filterStatus === "semua") return barangList;
-    return barangList.filter(b => b.status === filterStatus);
-  };
-
-  const filteredBarang = getFilteredBarang();
+  // Filtered barang list berdasarkan search dan status
+  const filteredBarang = useMemo(() => {
+    let result = [...barangList];
+    
+    // Filter by status
+    if (filterStatus !== "semua") {
+      result = result.filter(b => b.status === filterStatus);
+    }
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(b =>
+        b.jenisBarang?.toLowerCase().includes(query) ||
+        b.judulAksi?.toLowerCase().includes(query) ||
+        b.namaPendonasi?.toLowerCase().includes(query) ||
+        b.noResi?.toLowerCase().includes(query)
+      );
+    }
+    
+    return result;
+  }, [barangList, filterStatus, searchQuery]);
 
   return (
     <div className="space-y-6">
-      {/* Filter */}
-      <div className="flex gap-3">
-        <button
-          onClick={() => setFilterStatus("semua")}
-          className={`px-4 py-2 rounded-lg font-medium transition ${
-            filterStatus === "semua"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-          }`}
-        >
-          Semua
-        </button>
-        <button
-          onClick={() => setFilterStatus("belum diterima")}
-          className={`px-4 py-2 rounded-lg font-medium transition ${
-            filterStatus === "belum diterima"
-              ? "bg-yellow-600 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-          }`}
-        >
-          Belum Diterima
-        </button>
-        <button
-          onClick={() => setFilterStatus("diterima")}
-          className={`px-4 py-2 rounded-lg font-medium transition ${
-            filterStatus === "diterima"
-              ? "bg-green-600 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-          }`}
-        >
-          Sudah Diterima
-        </button>
+      {/* Search and Filter */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        {/* Search */}
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-3 transform text-gray-400 w-4 h-4" />
+          <input
+            type="text"
+            placeholder="Cari barang donasi..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 text-black bg-white pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
+          />
+        </div>
+        
+        {/* Filter Buttons */}
+        <div className="flex gap-3">
+          <button
+            onClick={() => setFilterStatus("semua")}
+            className={`px-4 py-2 rounded-lg font-medium transition ${
+              filterStatus === "semua"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            Semua
+          </button>
+          <button
+            onClick={() => setFilterStatus("belum diterima")}
+            className={`px-4 py-2 rounded-lg font-medium transition ${
+              filterStatus === "belum diterima"
+                ? "bg-yellow-600 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            Belum Diterima
+          </button>
+          <button
+            onClick={() => setFilterStatus("diterima")}
+            className={`px-4 py-2 rounded-lg font-medium transition ${
+              filterStatus === "diterima"
+                ? "bg-green-600 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            Sudah Diterima
+          </button>
+        </div>
       </div>
 
       {/* Table */}
@@ -169,7 +201,7 @@ const KelolaBarang = () => {
             {filteredBarang.length === 0 ? (
               <tr>
                 <td colSpan="8" className="px-6 py-8 text-center text-gray-500">
-                  Tidak ada data barang donasi
+                  {searchQuery ? "Tidak ada barang donasi yang sesuai pencarian" : "Tidak ada data barang donasi"}
                 </td>
               </tr>
             ) : (

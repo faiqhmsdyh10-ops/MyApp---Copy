@@ -375,7 +375,7 @@ const DonasiPage = () => {
         </div>
 
         {/* Content di atas hero background */}
-        <div className="relative z-10 pt-0">
+        <div className="relative z-10 pt-0 pb-16">
           {/* Hero Title Section */}
           <div className="w-full h-96 flex items-end justify-center">
             <div className="max-w-6xl mb-12 text-center px-6">
@@ -392,7 +392,7 @@ const DonasiPage = () => {
           </div>
         
         {/* Form Content */}
-        <div ref={formRef} className="max-w-4xl bg-white mx-auto px-6 pb-12 border rounded-3xl">
+        <div ref={formRef} className="max-w-4xl bg-white mx-auto px-6 pb-1 border rounded-3xl">
           <div className="bg-white rounded-lg p-8">
                                 <button
                       onClick={() => navigate(`/aksi/${id}`)}

@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { Search } from "lucide-react";
 import FormUpdateTransparansi from "../../components/FormUpdateTransparansi";
 
 const KelolaAksi = () => {
@@ -15,6 +16,9 @@ const KelolaAksi = () => {
   const [showTransparansiForm, setShowTransparansiForm] = useState(false);
   const [selectedPengajuan, setSelectedPengajuan] = useState(null);
   const [showPengajuanDetailModal, setShowPengajuanDetailModal] = useState(false);
+  // Search and Filter states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("semua");
   const [editForm, setEditForm] = useState({
     judul: "",
     deskripsi: "",
@@ -44,6 +48,28 @@ const KelolaAksi = () => {
     const pending = stored.filter(p => p.status === "pending_approval");
     setPengajuanAksiList(pending);
   };
+
+  // Filtered aksi list berdasarkan search dan status filter
+  const filteredAksiList = useMemo(() => {
+    let result = [...aksiList];
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(aksi => 
+        aksi.judul?.toLowerCase().includes(query) ||
+        aksi.deskripsi?.toLowerCase().includes(query) ||
+        (aksi.kategori && aksi.kategori.some(k => k.toLowerCase().includes(query)))
+      );
+    }
+    
+    // Filter by status
+    if (statusFilter !== "semua") {
+      result = result.filter(aksi => aksi.status === statusFilter);
+    }
+    
+    return result;
+  }, [aksiList, searchQuery, statusFilter]);
 
   // Helper function untuk warna badge kategori
   const getBadgeColor = (kategori) => {
@@ -260,10 +286,37 @@ const KelolaAksi = () => {
       {/* TAB 1: AKSI BERJALAN */}
       {activeTab === "aksi-berjalan" && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
+          {/* Header with Search, Filter, and Add Button */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-3 transform text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Cari aksi..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 text-black bg-white pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-56"
+                />
+              </div>
+              
+              {/* Status Filter */}
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 py-2 text-black pr-2 cursor-pointer border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              >
+                <option value="semua">Semua Status</option>
+                <option value="aktif">Aktif</option>
+                <option value="nonaktif">Nonaktif</option>
+                <option value="selesai">Selesai</option>
+              </select>
+            </div>
+            
             <button
               onClick={() => navigate("/admin/tambah-aksi")}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition whitespace-nowrap"
             >
               + Tambah Aksi
             </button>
@@ -280,9 +333,14 @@ const KelolaAksi = () => {
             + Tambah Aksi Pertama
           </button>
         </div>
+      ) : filteredAksiList.length === 0 ? (
+        <div className="bg-white rounded-lg shadow-md p-12 text-center">
+          <p className="text-gray-500">Tidak ada aksi yang sesuai filter.</p>
+        </div>
       ) : (
+        <>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {aksiList.map((aksi) => (
+          {filteredAksiList.map((aksi) => (
             <div 
               key={aksi.id} 
               className="bg-white rounded-xl border overflow-hidden cursor-pointer transition hover:shadow-lg"
@@ -353,6 +411,12 @@ const KelolaAksi = () => {
             </div>
           ))}
         </div>
+        
+        {/* Results count */}
+        <div className="text-sm text-gray-500 text-center">
+          Menampilkan {filteredAksiList.length} dari {aksiList.length} aksi
+        </div>
+        </>
       )}
 
       {/* Edit Modal */}

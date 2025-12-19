@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { Search } from "lucide-react";
 import { createNotification } from "../../utils/notificationHelper";
 
 const KelolaRelawan = () => {
@@ -10,6 +11,7 @@ const KelolaRelawan = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedPengajuan, setSelectedPengajuan] = useState(null);
   const [aksiList, setAksiList] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [formData, setFormData] = useState({
     nama: "",
     email: "",
@@ -162,8 +164,33 @@ const KelolaRelawan = () => {
 
   const pendingCount = pengajuanJasaList.filter(p => p.status === "pending").length;
 
+  // Filtered lists based on search query
+  const filteredRelawanList = useMemo(() => {
+    if (!searchQuery.trim()) return relawanList;
+    const query = searchQuery.toLowerCase();
+    return relawanList.filter(relawan =>
+      relawan.nama?.toLowerCase().includes(query) ||
+      relawan.email?.toLowerCase().includes(query) ||
+      relawan.noHp?.toLowerCase().includes(query) ||
+      relawan.keahlian?.toLowerCase().includes(query)
+    );
+  }, [relawanList, searchQuery]);
+
+  const filteredPengajuanJasaList = useMemo(() => {
+    if (!searchQuery.trim()) return pengajuanJasaList;
+    const query = searchQuery.toLowerCase();
+    return pengajuanJasaList.filter(pengajuan =>
+      pengajuan.nama?.toLowerCase().includes(query) ||
+      pengajuan.email?.toLowerCase().includes(query) ||
+      pengajuan.noHp?.toLowerCase().includes(query) ||
+      pengajuan.deskripsi?.toLowerCase().includes(query) ||
+      pengajuan.judulAksi?.toLowerCase().includes(query)
+    );
+  }, [pengajuanJasaList, searchQuery]);
+
   return (
     <div className="space-y-6">
+
       {/* Tabs */}
       <div className="flex space-x-4 border-b border-gray-200">
         <button
@@ -188,6 +215,20 @@ const KelolaRelawan = () => {
         </button>
       </div>
 
+      {/* Search Bar */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-3 transform text-gray-400 w-4 h-4" />
+          <input
+            type="text"
+            placeholder="Cari relawan atau pengajuan..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 text-black bg-white pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
+          />
+        </div>
+      </div>
+
       {/* Tab: Data Relawan */}
       {activeTab === "relawan" && (
         <div className="bg-white rounded-xl border overflow-hidden">
@@ -203,12 +244,14 @@ const KelolaRelawan = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {relawanList.length === 0 ? (
+              {filteredRelawanList.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-4 text-center text-gray-500">Belum ada relawan terdaftar</td>
+                  <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                    {searchQuery ? "Tidak ada relawan yang sesuai pencarian" : "Belum ada relawan terdaftar"}
+                  </td>
                 </tr>
               ) : (
-                relawanList.map((relawan) => (
+                filteredRelawanList.map((relawan) => (
                   <tr key={relawan.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{relawan.nama}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{relawan.email}</td>
@@ -260,13 +303,15 @@ const KelolaRelawan = () => {
               </button>
             </div>
           )}
-          {pengajuanJasaList.length === 0 ? (
+          {filteredPengajuanJasaList.length === 0 ? (
             <div className="bg-gray-50 rounded-lg p-8 text-center">
-              <p className="text-gray-500 text-lg">Tidak ada pengajuan jasa</p>
+              <p className="text-gray-500 text-lg">
+                {searchQuery ? "Tidak ada pengajuan jasa yang sesuai pencarian" : "Tidak ada pengajuan jasa"}
+              </p>
             </div>
           ) : (
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              {pengajuanJasaList.map((pengajuan, index) => {
+              {filteredPengajuanJasaList.map((pengajuan, index) => {
                 const aksiName = aksiList.find(a => a.id === parseInt(pengajuan.aksi_id) || a.id === pengajuan.aksi_id)?.judul || "Aksi Tidak Ditemukan";
                 return (
                   <div
