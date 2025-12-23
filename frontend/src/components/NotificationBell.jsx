@@ -147,18 +147,14 @@ const NotificationBell = ({ isScrolled }) => {
   // Auto mark all as read when dropdown is opened
   useEffect(() => {
     if (showDropdown && unreadCount > 0) {
-      // Small delay to let user see the unread state briefly before marking as read
-      const timer = setTimeout(() => {
-        const userEmail = localStorage.getItem("userEmail");
-        const allNotifications = JSON.parse(localStorage.getItem("userNotifications") || "[]");
-        const updatedNotifications = allNotifications.map(n => 
-          n.userEmail === userEmail ? { ...n, isRead: true } : n
-        );
-        localStorage.setItem("userNotifications", JSON.stringify(updatedNotifications));
-        loadNotifications();
-      }, 10000); // 10000ms delay so user can see the unread notifications briefly
-
-      return () => clearTimeout(timer);
+      // Mark as read immediately when dropdown is opened (no delay)
+      const userEmail = localStorage.getItem("userEmail");
+      const allNotifications = JSON.parse(localStorage.getItem("userNotifications") || "[]");
+      const updatedNotifications = allNotifications.map(n => 
+        n.userEmail === userEmail ? { ...n, isRead: true } : n
+      );
+      localStorage.setItem("userNotifications", JSON.stringify(updatedNotifications));
+      loadNotifications();
     }
   }, [showDropdown, unreadCount, loadNotifications]);
 

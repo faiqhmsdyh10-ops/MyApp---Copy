@@ -2,13 +2,24 @@ import { supabase } from '../config/supabaseClient.js'
 
 // GET all donations
 export const getDonations = async (req, res) => {
-  const { data, error } = await supabase
-    .from('donasi_uang')
-    .select('*')
-    .order('tanggal_donasi', { ascending: false })
+  try {
+    const { data, error } = await supabase
+      .from('donasi_uang')
+      .select('*')
+      .order('tanggal_donasi', { ascending: false })
 
-  if (error) return res.status(400).json({ error: error.message })
-  res.json(data)
+    if (error) {
+      // Log error but return empty array (graceful fallback)
+      // This allows frontend to still work with localStorage data
+      console.warn('Supabase donasi_uang query error:', error.message)
+      return res.json([])
+    }
+    res.json(data || [])
+  } catch (err) {
+    console.error('getDonations error:', err)
+    // Return empty array instead of error to allow frontend fallback
+    res.json([])
+  }
 }
 
 // POST a new donation

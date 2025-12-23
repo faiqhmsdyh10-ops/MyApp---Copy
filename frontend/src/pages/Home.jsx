@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Navbar from "../components/Navbar";
-import { getDashboardSummary } from "../api";
+import { UsersRound, Package, HeartHandshake, HandHeart, Heart } from "lucide-react";
 
 const formatNumber = (value) =>
   new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 }).format(value || 0);
@@ -20,37 +20,116 @@ const Home = () => {
     totalMoney: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchSummary = async () => {
+    const calculateStats = () => {
       try {
         setLoading(true);
-        const data = await getDashboardSummary();
-        setSummary({
-          totalDonors: data.totalDonors ?? 0,
-          totalGoods: data.totalGoods ?? 0,
-          totalServices: data.totalServices ?? 0,
-          totalMoney: data.totalMoney ?? 0,
+        
+        // Get donations from localStorage
+        const donations = JSON.parse(localStorage.getItem("donations") || "[]");
+        const aksiList = JSON.parse(localStorage.getItem("aksiList") || "[]");
+        
+        // Calculate unique donors (by email)
+        const uniqueDonors = new Set();
+        donations.forEach(d => {
+          if (d.email) uniqueDonors.add(d.email);
         });
-        setError("");
+        
+        // Calculate totals by donation type
+        let totalGoods = 0;
+        let totalServices = 0;
+        let totalMoney = 0;
+        
+        donations.forEach(d => {
+          if (d.tipeDonasi === "Uang" || d.tipeDonasi === "uang") {
+            const amount = parseInt(d.jumlahDonasi) || 0;
+            totalMoney += amount;
+          } else if (d.tipeDonasi === "Barang" || d.tipeDonasi === "barang") {
+            // Count number of items donated
+            if (Array.isArray(d.selectedBarang)) {
+              totalGoods += d.selectedBarang.length;
+            } else {
+              totalGoods += 1;
+            }
+          } else if (d.tipeDonasi === "Jasa" || d.tipeDonasi === "jasa") {
+            // Count number of services
+            if (Array.isArray(d.selectedJasa)) {
+              totalServices += d.selectedJasa.length;
+            } else {
+              totalServices += 1;
+            }
+          }
+        });
+        
+        // Also calculate from aksiList (donasiTerkumpul)
+        aksiList.forEach(aksi => {
+          if (aksi.donasiTerkumpul) {
+            // This might already be counted in donations, so we use the larger value
+          }
+        });
+        
+        setSummary({
+          totalDonors: uniqueDonors.size,
+          totalGoods: totalGoods,
+          totalServices: totalServices,
+          totalMoney: totalMoney,
+        });
       } catch (err) {
-        console.error("Gagal memuat ringkasan dashboard:", err);
-        setError(err.message || "Gagal memuat data dashboard");
+        console.error("Error calculating stats:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSummary();
+    calculateStats();
+    
+    // Listen for storage changes (when donations are added)
+    const handleStorageChange = () => {
+      calculateStats();
+    };
+    
+    window.addEventListener("storage", handleStorageChange);
+    
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
   }, []);
 
   const metrics = useMemo(
     () => [
-      { label: "Donatur Aktif", value: `${formatNumber(summary.totalDonors)}+`, icon: "😊" },
-      { label: "Barang Terkumpul", value: `${formatNumber(summary.totalGoods)}+`, icon: "📦" },
-      { label: "Jasa & Skill Dibagikan", value: `${formatNumber(summary.totalServices)}+`, icon: "🛠️" },
-      { label: "Donasi Tersalurkan", value: formatCurrency(summary.totalMoney), icon: "💙" },
+      { 
+        label: "Donatur Aktif", 
+        value: `${formatNumber(summary.totalDonors)}+`, 
+        icon: <UsersRound />,
+        description: "Orang-orang baik yang sudah berdonasi.",
+        color: "text-orange-500",
+        bgColor: "bg-orange-50"
+      },
+      { 
+        label: "Barang Terkumpul", 
+        value: `${formatNumber(summary.totalGoods)}+`, 
+        icon: <Package />,
+        description: "Barang layak pakai yang telah disalurkan.",
+        color: "text-blue-500",
+        bgColor: "bg-blue-50"
+      },
+      { 
+        label: "Jasa & Skill Dibagikan", 
+        value: `${formatNumber(summary.totalServices)}+`, 
+        icon: <HeartHandshake />,
+        description: "Keahlian dan waktu yang dibagikan untuk membantu.",
+        color: "text-green-500",
+        bgColor: "bg-green-50"
+      },
+      { 
+        label: "Donasi Tersalurkan", 
+        value: formatCurrency(summary.totalMoney), 
+        icon: <HandHeart />,
+        description: "Total dana yang sudah tersalurkan.",
+        color: "text-purple-500",
+        bgColor: "bg-purple-50"
+      },
     ],
     [summary]
   );
@@ -62,7 +141,7 @@ const Home = () => {
       {/* Hero Section */}
       <section className="pt-56 pb-20 relative bg-cover bg-center h-[100vh]" style={{ backgroundImage: "url('/images/hero.jpg')" }}>
         <div className="max-w-6xl mx-auto text-left ml-24">
-          <h1 className="text-6xl font-bold text-white">
+          <h1 className="text-6xl font-bold text-white leading-tight">
             Bikin Dampak Nyata, <br />
             Mulai dari Hal <span className="pl-2 pb-1 border-r-2 text-yellow-50 rounded-l-md px-1 border-yellow-500 bg-yellow-500/40">Sederhana</span>
           </h1>
@@ -91,21 +170,30 @@ const Home = () => {
           sejauh mana kebaikan ini sudah berjalan bareng kamu semua!
         </p>
 
-        <div className="mt-10 grid grid-cols-4 gap-6 max-w-full mx-24">
+        <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-16 max-w-6xl mx-auto px-6">
           {metrics.map((item) => (
             <div
               key={item.label}
-              className="bg-white p-6 rounded-2xl border-2 border-gray-300 hover:shadow-lg transition"
+              className="bg-white p-0 rounded-xl transition-all duration-300 text-left"
             >
-              <p className="text-4xl mb-2">{item.icon}</p>
-              <p className="text-3xl font-bold text-gray-400">{item.value}</p>
-              <p className="text-gray-700 mt-1">{item.label}</p>
+              {/* Icon */}
+              <div className={`w-10 h-10 ${item.bgColor} rounded-lg flex items-center justify-center mb-4`}>
+                <span className={`text-xl ${item.color}`}>{item.icon}</span>
+              </div>
+              
+              {/* Value */}
+              <p className={`text-3xl font-bold ${item.color} mb-4`}>{item.value}</p>
+              
+              {/* Label */}
+              <p className="text-gray-900 text-md font-semibold mb-1">{item.label}</p>
+              
+              {/* Description */}
+              <p className="text-gray-500 text-sm">{item.description}</p>
             </div>
           ))}
         </div>
 
         {loading && <p className="mt-8 text-gray-500">Memuat data...</p>}
-        {error && <p className="mt-8 text-red-500">{error}</p>}
       </section>
 
       {/* Benefits Section */}
@@ -123,19 +211,19 @@ const Home = () => {
             {/* Right - Benefits Grid */}
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-3">
-                <div className="text-4xl">📋</div>
+                <div className="w-12 h-12 bg-blue-100 text-blue-600 flex items-center justify-center rounded-lg">< Heart /></div>
                 <h3 className="font-regular text-gray-900">Kamu gak perlu khawatir, platform kami 100% amanah dan dapat diandalkan!</h3>
               </div>
               <div className="space-y-3">
-                <div className="text-4xl">💼</div>
+                <div className="w-12 h-12 bg-blue-100 text-blue-600 flex items-center justify-center rounded-lg">< HandHeart /></div>
                 <h3 className="font-regular text-gray-900">Dukung kampanye sosial lewat QRIS, e-wallet, atau virtual account. Semudah beli kopi kekinian.</h3>
               </div>
               <div className="space-y-3">
-                <div className="text-4xl">📦</div>
+                <div className="w-12 h-12 bg-blue-100 text-blue-600 flex items-center justify-center rounded-lg">< Package /></div>
                 <h3 className="font-regular text-gray-900">Punya barang layak pakai? Kirim ke drop point terdekat dan bantu yang membutuhkan.</h3>
               </div>
               <div className="space-y-3">
-                <div className="text-4xl">⏰</div>
+                <div className="w-12 h-12 bg-blue-100 text-blue-600 flex items-center justify-center rounded-lg">< HeartHandshake /></div>
                 <h3 className="font-regular text-gray-900">Bagi waktu dan skill kamu untuk bantu komunitas, dari mengajar sampai servis gratis.</h3>
               </div>
             </div>
@@ -202,12 +290,6 @@ const Home = () => {
           {/* Partner Logos */}
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-8">Suara Mereka yang Udah Ikut Berbagi</h2>
-            <div className="flex justify-center items-center gap-12 flex-wrap opacity-60">
-              <div className="text-2xl font-bold text-gray-400">Gojek</div>
-              <div className="text-2xl font-bold text-gray-400">Tokopedia</div>
-              <div className="text-2xl font-bold text-gray-400">Traveloka</div>
-              <div className="text-2xl font-bold text-gray-400">KitaBisa.com</div>
-            </div>
           </div>
 
           {/* Testimonial Carousel */}

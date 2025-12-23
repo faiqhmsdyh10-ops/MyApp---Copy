@@ -1,7 +1,9 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { createNotification } from "../utils/notificationHelper";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const DonasiPage = () => {
   const { id } = useParams();
@@ -10,8 +12,16 @@ const DonasiPage = () => {
   const [aksi, setAksi] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [donationType, setDonationType] = useState("");
-  const [timeRemaining, setTimeRemaining] = useState(300); // 5 menit = 300 detik
+  const [timeRemaining, setTimeRemaining] = useState(900); // 15 menit = 900 detik (sesuai Midtrans)
   const [timerActive, setTimerActive] = useState(false);
+  
+  // Midtrans Payment States
+  const [isGeneratingQR, setIsGeneratingQR] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState("");
+  const [orderId, setOrderId] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState("pending");
+  const [isCheckingPayment, setIsCheckingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
   
   const [formData, setFormData] = useState({
     // Step 1: Data Diri
@@ -91,13 +101,171 @@ const DonasiPage = () => {
     }
   }, [currentStep, donationType, timerActive, timeRemaining, navigate, id]);
 
-  // Activate timer when entering step 3 with Uang donation
-  useEffect(() => {
-    if (currentStep === 3 && donationType === "Uang") {
-      setTimerActive(true);
-      setTimeRemaining(300); // Reset ke 5 menit
+  // Generate QR Code from Midtrans when entering step 3 with Uang donation
+  const generateQrisPayment = useCallback(async () => {
+    if (!aksi || !formData.jumlahDonasi) return;
+    
+    setIsGeneratingQR(true);
+    setPaymentError("");
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/payment/create-qris`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: parseInt(formData.jumlahDonasi),
+          donorName: formData.namaLengkap,
+          donorEmail: formData.email,
+          donorPhone: formData.noHp,
+          aksiId: aksi.id,
+          aksiTitle: aksi.judul,
+        }),
+      });
+
+      const result = await response.json();
+      console.log("📦 Full API Response:", result);
+
+      if (result.success) {
+        console.log("🔗 QR Code URL:", result.data.qrCodeUrl);
+        setQrCodeUrl(result.data.qrCodeUrl);
+        setOrderId(result.data.orderId);
+        setPaymentStatus("pending");
+        setTimerActive(true);
+        setTimeRemaining(900); // 15 menit sesuai expiry Midtrans
+        console.log("✅ QRIS Payment created:", result.data);
+      } else {
+        setPaymentError(result.message || "Gagal membuat pembayaran");
+        console.error("❌ Failed to create QRIS:", result);
+      }
+    } catch (error) {
+      console.error("❌ Error creating QRIS payment:", error);
+      setPaymentError("Gagal terhubung ke server pembayaran. Pastikan backend berjalan.");
+    } finally {
+      setIsGeneratingQR(false);
     }
-  }, [currentStep, donationType]);
+  }, [aksi, formData.jumlahDonasi, formData.namaLengkap, formData.email, formData.noHp]);
+
+  // Handle successful payment from Midtrans (auto-called when payment detected)
+  const handleSuccessfulPayment = useCallback(() => {
+    if (!aksi) return;
+    
+    // Save donation
+    const donation = {
+      id: Date.now(),
+      aksiId: aksi.id,
+      aksiJudul: aksi.judul,
+      namaLengkap: formData.namaLengkap,
+      email: formData.email,
+      noHp: formData.noHp,
+      jumlahDonasi: formData.jumlahDonasi,
+      tipeDonasi: "Uang",
+      orderId: orderId,
+      paymentMethod: "QRIS Midtrans",
+      paymentStatus: "success",
+      createdAt: new Date().toISOString(),
+    };
+
+    const donations = JSON.parse(localStorage.getItem("donations") || "[]");
+    donations.push(donation);
+    localStorage.setItem("donations", JSON.stringify(donations));
+
+    // Update progress donasi uang pada aksi terkait
+    const aksiList = JSON.parse(localStorage.getItem("aksiList") || "[]");
+    const aksiIndex = aksiList.findIndex(a => a.id === aksi.id);
+    if (aksiIndex !== -1) {
+      const jumlahDonasi = parseInt(formData.jumlahDonasi) || 0;
+      const currentDonasi = aksiList[aksiIndex].donasiTerkumpul || 0;
+      const newTotal = currentDonasi + jumlahDonasi;
+      const targetDonasi = aksiList[aksiIndex].targetDonasi || 0;
+      
+      aksiList[aksiIndex].donasiTerkumpul = newTotal;
+      
+      // Auto-update status jika mencapai 100%
+      if (targetDonasi > 0 && newTotal >= targetDonasi) {
+        aksiList[aksiIndex].status = "selesai";
+      }
+      
+      localStorage.setItem("aksiList", JSON.stringify(aksiList));
+    }
+
+    // Create notification for successful donation
+    const userEmail = localStorage.getItem("userEmail");
+    if (userEmail) {
+      const formatRupiah = (number) => {
+        return new Intl.NumberFormat("id-ID", {
+          style: "currency",
+          currency: "IDR",
+          minimumFractionDigits: 0,
+        }).format(number || 0);
+      };
+      createNotification(
+        userEmail,
+        "donation_success",
+        "Pembayaran Berhasil! 🎉",
+        `Donasi uang sebesar ${formatRupiah(formData.jumlahDonasi)} untuk aksi "${aksi.judul}" berhasil diterima. Terima kasih atas kebaikan Anda!`
+      );
+    }
+
+    // Redirect to success page or aksi detail
+    setTimeout(() => {
+      alert("🎉 Pembayaran berhasil! Terima kasih atas donasi Anda.");
+      navigate(`/aksi/${id}`);
+    }, 500);
+  }, [aksi, formData.namaLengkap, formData.email, formData.noHp, formData.jumlahDonasi, orderId, navigate, id]);
+
+  // Check payment status from Midtrans
+  const checkPaymentStatus = useCallback(async () => {
+    if (!orderId) return;
+    
+    setIsCheckingPayment(true);
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/payment/status/${orderId}`);
+      const result = await response.json();
+
+      if (result.success) {
+        const status = result.data.transactionStatus;
+        console.log("📊 Payment status:", status);
+        
+        if (status === "settlement" || status === "capture") {
+          setPaymentStatus("success");
+          // Auto submit donation when payment successful
+          handleSuccessfulPayment();
+        } else if (status === "pending") {
+          setPaymentStatus("pending");
+        } else if (status === "expire" || status === "cancel" || status === "deny") {
+          setPaymentStatus("failed");
+          setPaymentError("Pembayaran gagal atau kadaluarsa. Silakan coba lagi.");
+        }
+      }
+    } catch (error) {
+      console.error("Error checking payment status:", error);
+    } finally {
+      setIsCheckingPayment(false);
+    }
+  }, [orderId, handleSuccessfulPayment]);
+
+  // Polling untuk cek status pembayaran setiap 5 detik
+  useEffect(() => {
+    let interval;
+    if (currentStep === 3 && donationType === "Uang" && orderId && paymentStatus === "pending") {
+      interval = setInterval(() => {
+        checkPaymentStatus();
+      }, 5000); // Check every 5 seconds
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [currentStep, donationType, orderId, paymentStatus, checkPaymentStatus]);
+
+  // Generate QR when entering step 3 with Uang donation
+  useEffect(() => {
+    if (currentStep === 3 && donationType === "Uang" && !qrCodeUrl && !isGeneratingQR) {
+      generateQrisPayment();
+    }
+  }, [currentStep, donationType, qrCodeUrl, isGeneratingQR, generateQrisPayment]);
 
   // Scroll to form when step changes
   useEffect(() => {
@@ -110,26 +278,6 @@ const DonasiPage = () => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        alert("Ukuran file terlalu besar! Maksimal 2MB.");
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({
-          ...formData,
-          buktiPembayaran: file,
-          buktiPreview: reader.result,
-        });
-      };
-      reader.readAsDataURL(file);
-    }
   };
 
   const handleBarangToggle = (item) => {
@@ -809,20 +957,77 @@ const DonasiPage = () => {
                       <h4 className="font-bold text-blue-900 mb-4 text-lg">Scan QRIS untuk Pembayaran</h4>
                       <div className="bg-white p-6 rounded-lg">
                         <div className="flex flex-col items-center">
-                          {/* QR Code Image - Ganti path dengan gambar QR Anda */}
+                          {/* Dynamic QR Code from Midtrans */}
                           <div className="w-64 h-64 bg-white border-4 border-blue-500 rounded-xl shadow-lg overflow-hidden flex items-center justify-center">
-                            <img 
-                              src="/images/qris2.png" 
-                              alt="QR Code Payment" 
-                              className="w-full h-full object-contain p-4"
-                              onError={(e) => {
-                                e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="%23e5e7eb"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="14" fill="%236b7280">QR Code</text></svg>';
-                              }}
-                            />
+                            {isGeneratingQR ? (
+                              <div className="flex flex-col items-center">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                                <p className="text-sm text-gray-500 mt-3">Generating QR Code...</p>
+                              </div>
+                            ) : paymentError ? (
+                              <div className="flex flex-col items-center p-4 text-center">
+                                <svg className="w-12 h-12 text-red-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <p className="text-sm text-red-600">{paymentError}</p>
+                                <button
+                                  onClick={generateQrisPayment}
+                                  className="mt-3 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+                                >
+                                  Coba Lagi
+                                </button>
+                              </div>
+                            ) : paymentStatus === "success" ? (
+                              <div className="flex flex-col items-center p-4 text-center">
+                                <svg className="w-16 h-16 text-green-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <p className="text-lg font-bold text-green-600">Pembayaran Berhasil!</p>
+                                <p className="text-sm text-gray-500 mt-1">Terima kasih atas donasi Anda</p>
+                              </div>
+                            ) : qrCodeUrl ? (
+                              <img 
+                                src={qrCodeUrl} 
+                                alt="QR Code Payment" 
+                                className="w-full h-full object-contain p-2"
+                              />
+                            ) : (
+                              <div className="flex flex-col items-center">
+                                <div className="animate-pulse bg-gray-200 w-48 h-48 rounded"></div>
+                                <p className="text-sm text-gray-400 mt-2">Loading QR...</p>
+                              </div>
+                            )}
                           </div>
-                          <p className="text-sm text-gray-600 mt-4 text-center max-w-xs">
-                            Scan QR code dengan aplikasi pembayaran Anda (GoPay, OVO, DANA, dll)
-                          </p>
+                          
+                          {qrCodeUrl && paymentStatus === "pending" && (
+                            <>
+                              <p className="text-sm text-gray-600 mt-4 text-center max-w-xs">
+                                Scan QR code dengan aplikasi pembayaran Anda (GoPay, OVO, DANA, ShopeePay, dll)
+                              </p>
+                              
+                              {/* Payment Status Indicator */}
+                              <div className="mt-4 flex items-center gap-2 text-sm">
+                                {isCheckingPayment ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                    <span className="text-gray-500">Memeriksa status pembayaran...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                                    <span className="text-yellow-600">Menunggu pembayaran</span>
+                                  </>
+                                )}
+                              </div>
+                              
+                              {orderId && (
+                                <p className="text-xs text-gray-400 mt-2">
+                                  Order ID: {orderId}
+                                </p>
+                              )}
+                            </>
+                          )}
+                          
                           <div className="mt-4 px-5 py-2 bg-blue-50 rounded-full border border-blue-600">
                             <p className="text-sm font-semibold text-blue-800">
                               Total: {new Intl.NumberFormat("id-ID", {
@@ -832,31 +1037,37 @@ const DonasiPage = () => {
                               }).format(formData.jumlahDonasi || 0)}
                             </p>
                           </div>
+                          
+                          {/* Manual Check Button */}
+                          {qrCodeUrl && paymentStatus === "pending" && (
+                            <button
+                              onClick={checkPaymentStatus}
+                              disabled={isCheckingPayment}
+                              className="mt-4 px-4 py-2 text-sm text-blue-600 hover:text-blue-800 underline disabled:opacity-50"
+                            >
+                              {isCheckingPayment ? "Memeriksa..." : "Cek Status Pembayaran"}
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Upload Bukti Pembayaran <span className="text-red-500">*</span>
-                      </label>
-                      <p className="text-xs text-gray-500 mb-3">
-                        Upload screenshot bukti pembayaran setelah scan QR code
-                      </p>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileUpload}
-                        className="block w-full rounded-xl text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                      />
-                      {formData.buktiPreview && (
-                        <img
-                          src={formData.buktiPreview}
-                          alt="Preview"
-                          className="mt-4 w-full max-w-md h-48 object-cover rounded-lg border"
-                        />
-                      )}
-                    </div>
+                    {/* Info: Tidak perlu upload bukti lagi karena otomatis terdeteksi */}
+                    {paymentStatus === "pending" && (
+                      <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+                        <div className="flex items-start gap-3">
+                          <svg className="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <div>
+                            <p className="text-sm font-medium text-green-800">Pembayaran Otomatis Terdeteksi</p>
+                            <p className="text-xs text-green-600 mt-1">
+                              Setelah Anda melakukan pembayaran, sistem akan otomatis mendeteksi dan memproses donasi Anda. Tidak perlu upload bukti pembayaran.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -921,18 +1132,43 @@ const DonasiPage = () => {
                 <div className="flex justify-between pt-4 gap-3">
                   <div className="flex gap-3">
                     <button
-                      onClick={() => setCurrentStep(2)}
+                      onClick={() => {
+                        // Reset payment states when going back
+                        if (donationType === "Uang") {
+                          setQrCodeUrl("");
+                          setOrderId("");
+                          setPaymentStatus("pending");
+                          setTimerActive(false);
+                          setPaymentError("");
+                        }
+                        setCurrentStep(2);
+                      }}
                       className="border border-gray-300 px-6 py-2 text-black rounded-full hover:bg-gray-50 transition font-medium"
                     >
                       Kembali
                     </button>
                   </div>
-                  <button
-                    onClick={handleSubmit}
-                    className="bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700 transition font-medium"
-                  >
-                    Konfirmasi Donasi
-                  </button>
+                  
+                  {/* Tombol konfirmasi hanya untuk Barang dan Jasa, tidak untuk Uang (otomatis) */}
+                  {donationType !== "Uang" && (
+                    <button
+                      onClick={handleSubmit}
+                      className="bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700 transition font-medium"
+                    >
+                      Konfirmasi Donasi
+                    </button>
+                  )}
+                  
+                  {/* Info untuk donasi Uang */}
+                  {donationType === "Uang" && paymentStatus === "pending" && (
+                    <div className="flex items-center text-sm text-gray-500">
+                      <svg className="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Menunggu pembayaran...
+                    </div>
+                  )}
                 </div>
               </div>
             )}

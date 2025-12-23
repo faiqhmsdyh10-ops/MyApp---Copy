@@ -1,8 +1,15 @@
 // backend/config/supabaseClient.js
 import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
-dotenv.config()
+// Get the directory of the current module
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+// Load .env from the backend directory (parent of config)
+dotenv.config({ path: path.join(__dirname, '..', '.env') })
 
 const supabaseUrl = process.env.SUPABASE_URL?.trim()
 const supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_KEY)?.trim()

@@ -242,24 +242,37 @@ const TentangKami = () => {
         <section className="py-16 px-4 bg-white">
           <div className="max-w-7xl mx-auto text-center">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Partner Kami</h2>
-            <p className="text-gray-600 mb-12 max-w-2xl mx-auto">
+            <p className="text-gray-600 mb-12 max-w-full mx-auto">
               Bekerja sama dengan berbagai organisasi dan perusahaan untuk dampak yang lebih besar
             </p>
-            <div className="flex flex-wrap justify-center gap-8 items-center">
-              <div className="w-32 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
-                <span className="text-gray-400 font-bold">Partner 1</span>
+              <div className="flex justify-center items-center gap-12 flex-wrap opacity-60">
+              <div className="flex flex-wrap items-center justify-center gap-8">
+                <img
+                  src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/gojek.svg"
+                  alt="Gojek"
+                  className="h-10"
+                />
               </div>
-              <div className="w-32 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
-                <span className="text-gray-400 font-bold">Partner 2</span>
+              <div className="flex flex-wrap items-center justify-center gap-8">
+                <img
+                  src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/shopee.svg"
+                  alt="Gojek"
+                  className="h-10"
+                />
               </div>
-              <div className="w-32 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
-                <span className="text-gray-400 font-bold">Partner 3</span>
+              <div className="flex flex-wrap items-center justify-center gap-8">
+                <img
+                  src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/alibabadotcom.svg"
+                  alt="Gojek"
+                  className="h-10"
+                />
               </div>
-              <div className="w-32 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
-                <span className="text-gray-400 font-bold">Partner 4</span>
-              </div>
-              <div className="w-32 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
-                <span className="text-gray-400 font-bold">Partner 5</span>
+              <div className="flex flex-wrap items-center justify-center gap-8">
+                <img
+                  src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/grab.svg"
+                  alt="Gojek"
+                  className="h-10"
+                />
               </div>
             </div>
           </div>

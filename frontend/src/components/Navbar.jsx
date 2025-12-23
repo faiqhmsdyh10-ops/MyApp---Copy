@@ -153,7 +153,7 @@ const Navbar = () => {
                     }}
                     className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 transition"
                   >
-                    👤 Profil Saya
+                  Profil Saya
                   </button>
                   <button
                     onClick={() => {
@@ -162,14 +162,14 @@ const Navbar = () => {
                     }}
                     className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 transition"
                   >
-                    💝 Donasi Saya
+                  Donasi Saya
                   </button>
                   <hr className="my-2" />
                   <button
                     onClick={handleLogout}
                     className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition"
                   >
-                  🚪 Keluar
+                  Keluar
                   </button>
                 </div>
               )}

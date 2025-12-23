@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import { getDonations } from "../api";
 
 const AksiBerjalan = () => {
   const navigate = useNavigate();
@@ -36,24 +35,13 @@ const AksiBerjalan = () => {
       try {
         setLoading(true);
         
-        // First, get from localStorage (admin-created aksi)
+        // Get from localStorage (admin-created aksi)
+        // Note: Aksi saat ini disimpan di localStorage, bukan Supabase
         const localAksiRaw = JSON.parse(localStorage.getItem("aksiList") || "[]");
         const localAksi = Array.isArray(localAksiRaw) ? localAksiRaw.filter(Boolean) : [];
         
-        // Then get from API
-        let apiData = [];
-        try {
-          apiData = await getDonations();
-        } catch (err) {
-          console.warn("Could not fetch from API:", err);
-        }
-        
-        // Merge both sources, prioritize localStorage, filter out falsy/null items
-        const mergedRaw = [...(Array.isArray(localAksi) ? localAksi : []), ...(Array.isArray(apiData) ? apiData : [])];
-        const merged = mergedRaw.filter(Boolean);
-        
-        setDonations(merged || []);
-        setFilteredDonations(merged || []);
+        setDonations(localAksi);
+        setFilteredDonations(localAksi);
         setError("");
       } catch (err) {
         console.error("Gagal memuat aksi berjalan:", err);
@@ -132,7 +120,7 @@ const AksiBerjalan = () => {
         <div className="max-w-8xl ml-24">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
             <div>
-              <h2 className="text-6xl font-bold text-white">Aksi Berjalan: <span className="text-white">Ayo Bikin Dunia lebih Baik!</span></h2>
+              <h2 className="text-6xl font-bold text-white leading-tight">Aksi Berjalan: <span className="text-white">Ayo Bikin Dunia <span className="pl-2 pb-2 border-r-2 text-yellow-50 rounded-l-md px-1 border-yellow-400 bg-yellow-500/40">lebih Baik!</span> </span></h2>
               <p className="mt-4 text-white max-w-xl">
                 Yuk, lihat berbagai aksi kebaikan yang lagi jalan. Kamu bisa pilih mana yang paling
                 menyentuh hatimu buat didukung hari ini.

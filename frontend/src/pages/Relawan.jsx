@@ -110,7 +110,7 @@ const Relawan = () => {
                   Bersama sejak 2023 • Lebih dari 1.000 Relawan
                 </div>
                 <h1 className="text-6xl font-bold text-white mb-6 leading-tight">
-                  Tingkatkan Potensi dan Peluang Berkontribusi di Masyarakat!
+                  Tingkatkan Potensi dan Peluang <span className="pl-2 pb-2 border-r-2 text-yellow-50 rounded-l-md px-1 border-yellow-400 bg-yellow-500/40">Berkontribusi di Masyarakat!</span>
                 </h1>
                 <p className="text-white leading-relaxed mb-8">
                   Bergabunglah dengan program relawan RuangBerbagi dan dapatkan pengalaman berharga, 
